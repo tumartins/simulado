@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Simulado AV3 Biomecânica</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Layout: caixas de diálogo de RPG de 16 bits, branco com preto e vermelho, bordas duplas e sombras duras */
+:root{--bg:#FFFFFF;--fg:#000000;--red:#D40000;--line:#000000;--soft:#F2F2F2;--muted:#333333;
+--px:'Press Start 2P','Courier New',monospace;--body:'VT323','Courier New',monospace;color-scheme:light}
+*{box-sizing:border-box}
+body{background-color:var(--bg);color:var(--fg);font-family:var(--body);font-size:23px;line-height:1.25;margin:0;
+background-image:linear-gradient(45deg,var(--soft) 25%,transparent 25%,transparent 75%,var(--soft) 75%),linear-gradient(45deg,var(--soft) 25%,transparent 25%,transparent 75%,var(--soft) 75%);
+background-size:16px 16px;background-position:0 0,8px 8px;
+padding-block:24px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));image-rendering:pixelated}
+.wrap{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:20px;min-width:0}
+.eyebrow{font-family:var(--px);font-size:11px;line-height:1.6;letter-spacing:.05em;text-transform:uppercase;color:var(--red)}
+h1,h2,h3{font-family:var(--px);font-weight:400;line-height:1.5;margin:0;text-wrap:balance;text-transform:uppercase}
+h1{font-size:clamp(20px,5.4vw,32px)}h2{font-size:16px}h3{font-size:14px}
+p{margin:0}
+.lead{font-size:25px}
+.autor{font-family:var(--px);font-size:11px;line-height:1.7;background:var(--bg);border:4px solid var(--line);padding:8px 12px;align-self:flex-start;box-shadow:4px 4px 0 var(--line)}
+.title{background:var(--bg);border:4px solid var(--line);box-shadow:inset 0 0 0 4px var(--bg),inset 0 0 0 8px var(--line),6px 6px 0 var(--line);padding:26px 24px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.mascote{image-rendering:pixelated;width:112px;height:56px;animation:bob 1.2s steps(2) infinite}
+@keyframes bob{50%{transform:translateY(-4px)}}
+.card{background:var(--bg);border:4px solid var(--line);box-shadow:inset 0 0 0 4px var(--bg),inset 0 0 0 8px var(--line),6px 6px 0 var(--line);padding:26px 24px;display:flex;flex-direction:column;gap:16px;min-width:0}
+label{font-family:var(--px);font-size:11px;line-height:1.6;text-transform:uppercase}
+input,select{font:inherit;font-size:24px;width:100%;padding:10px 12px;border:4px solid var(--line);border-radius:0;background:var(--bg);color:var(--fg)}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:4px solid var(--red);outline-offset:3px}
+.field{display:flex;flex-direction:column;gap:8px}
+.btn{font-family:var(--px);font-size:12px;line-height:1.5;text-transform:uppercase;cursor:pointer;border:4px solid var(--line);background:var(--fg);color:#fff;padding:14px 18px;border-radius:0;align-self:flex-start;box-shadow:4px 4px 0 #fff,8px 8px 0 var(--line)}
+.btn:hover:not([disabled]){transform:translate(2px,2px);box-shadow:2px 2px 0 #fff,4px 4px 0 var(--line)}
+.btn:active:not([disabled]){transform:translate(4px,4px);box-shadow:none}
+.btn.ghost{background:var(--bg);color:var(--fg)}
+.btn[disabled]{opacity:.35;cursor:not-allowed}
+.err{color:var(--red);font-size:22px;min-height:1.2em}
+ul.rules{margin:0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:6px;background:var(--bg);border:4px solid var(--line);padding:14px 16px}
+ul.rules li::before{content:"► ";color:var(--red)}
+.bar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-family:var(--px);font-size:10px;line-height:1.8;text-transform:uppercase;background:var(--bg);border:4px solid var(--line);padding:8px 12px}
+.track{border:4px solid var(--line);padding:4px;background:var(--bg)}
+.fill{height:14px;background:repeating-linear-gradient(90deg,var(--red) 0 12px,var(--bg) 12px 16px);width:0;transition:width .3s steps(8)}
+.hp{font-family:var(--px);font-size:10px;display:flex;justify-content:space-between;background:var(--bg);padding:0 2px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-family:var(--px);font-size:9px;line-height:1.6;text-transform:uppercase;border:3px solid var(--line);padding:4px 8px;background:var(--bg)}
+.enun{font-size:27px;line-height:1.25}
+.opts{display:flex;flex-direction:column;gap:12px;margin:0;padding:0;list-style:none}
+.opt{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;font:inherit;font-size:24px;line-height:1.2;cursor:pointer;border:4px solid var(--line);border-radius:0;padding:10px 12px;background:var(--bg);color:var(--fg)}
+.opt:hover:not([disabled]){background:var(--soft)}
+.opt .l{font-family:var(--px);font-size:12px;min-width:2.2em;padding-top:4px}
+.opt .t{flex:1;min-width:0;overflow-wrap:anywhere}
+.opt .tag{font-family:var(--px);font-size:9px;line-height:1.6;text-transform:uppercase;white-space:nowrap;padding-top:4px}
+.opt[aria-pressed="true"]{background:var(--soft);box-shadow:inset 0 0 0 3px var(--bg),inset 0 0 0 6px var(--line)}
+.opt[aria-pressed="true"] .l::before{content:"►";color:var(--red);margin-right:2px}
+.opt.right{background:var(--soft);box-shadow:inset 0 0 0 3px var(--bg),inset 0 0 0 6px var(--line)}
+.opt.wrong{border-color:var(--red);box-shadow:inset 0 0 0 3px var(--bg),inset 0 0 0 6px var(--red)}
+.opt.wrong .tag,.opt.wrong .l{color:var(--red)}
+.opt[disabled]{cursor:default}
+.fb{border:4px solid var(--line);padding:14px;background:var(--bg);display:flex;flex-direction:column;gap:10px;animation:pop .25s steps(3)}
+.fb.bad{border-color:var(--red)}
+.fb .v{font-family:var(--px);font-size:13px;line-height:1.6;text-transform:uppercase}
+.fb.bad .v{color:var(--red)}
+.fb #fb-c{font-size:25px}
+@keyframes pop{from{transform:scale(.96)}to{transform:scale(1)}}
+table{border-collapse:collapse;width:100%;font-size:23px}
+th,td{text-align:left;padding:8px 10px;border-bottom:4px solid var(--line)}
+th{font-family:var(--px);font-size:9px;line-height:1.6;text-transform:uppercase}
+.scroll{overflow-x:auto}
+.nota{font-family:var(--px);font-size:clamp(48px,15vw,96px);line-height:1.1;background:var(--bg);border:4px solid var(--line);box-shadow:6px 6px 0 var(--line);padding:18px 22px;align-self:flex-start;animation:pop .5s steps(4)}
+.nota small{font-size:.3em}
+details{border:4px solid var(--line);padding:10px 14px;background:var(--bg)}
+summary{cursor:pointer;font-size:24px}
+details p{margin-top:10px}
+textarea{font:inherit;font-size:22px;width:100%;min-height:90px;padding:10px;border:4px solid var(--line);border-radius:0}
+.nav{display:flex;gap:10px}
+.tab{font-family:var(--px);font-size:11px;line-height:1.5;text-transform:uppercase;cursor:pointer;border:4px solid var(--line);background:var(--bg);color:var(--fg);padding:10px 14px;border-radius:0}
+.tab[aria-current="page"],.tab[aria-selected="true"]{background:var(--fg);color:#fff}
+.vers{border:4px solid var(--line);padding:12px;display:flex;flex-direction:column;gap:8px;margin:0;min-width:0;background:var(--bg)}
+.vers legend{font-family:var(--px);font-size:11px;padding:0 6px;text-transform:uppercase;background:var(--bg)}
+.v{display:flex;gap:10px;align-items:flex-start;font-family:var(--body);font-size:23px;text-transform:none;cursor:pointer;padding:8px;border:3px solid transparent}
+.v input{width:auto;margin-top:6px;accent-color:#000}
+.v:has(input:checked){background:var(--soft);border-color:var(--line)}
+.me{background:var(--soft);font-weight:700}
+.wrap>*,.card>*,.scroll{min-width:0;max-width:100%}
+.tab{max-width:100%}
+.wrap{padding-right:8px;padding-bottom:8px}
+body{overflow-x:hidden}
+@media (max-width:520px){.card,.title{padding:20px 14px}.opt .l{min-width:1.8em}.opt{gap:8px}}
+.blink{animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){.fill,.mascote,.fb,.nota,.blink{animation:none;transition:none}}
+</style>
+</head><body>
+<div class="wrap" id="app">
+ <nav class="nav" aria-label="Seções"><button class="tab" id="n-sim" aria-current="page">Simulado</button><button class="tab" id="n-rank">Ranking</button></nav>
+ <section id="s-intro" class="wrap" style="gap:20px">
+  <div class="title">
+   <svg class="mascote" viewBox="0 0 28 14" shape-rendering="crispEdges" role="img" aria-label="Halter em pixel art"><rect x="1" y="3" width="3" height="8" fill="#D40000"/><rect x="5" y="1" width="3" height="12" fill="#D40000"/><rect x="9" y="6" width="10" height="2" fill="#000"/><rect x="20" y="1" width="3" height="12" fill="#D40000"/><rect x="24" y="3" width="3" height="8" fill="#D40000"/></svg>
+   <p class="eyebrow">Revisão para a AV3</p>
+   <h1>Simulado de Biomecânica</h1>
+   <p class="autor">Prof. Túlio G. Martins-Guimarães</p>
+  </div>
+  <p class="lead">Questões de múltipla escolha com situações de treino e conceitos, sem cálculos, no estilo da sua prova. Escolha entre três versões. Em todas, a nota vai de 0 a 100.</p>
+  <div class="card">
+   <fieldset class="vers"><legend>Escolha a fase</legend>
+    <label class="v"><input type="radio" name="ver" value="completa" checked><span><b>Aventura completa · 50 questões</b><br>Revisão geral. Cada questão vale 2 pontos.</span></label>
+    <label class="v"><input type="radio" name="ver" value="curta"><span><b>Missão rápida · 30 questões</b><br>Todos os temas em formato reduzido. Cada questão vale 3,33 pontos.</span></label>
+    <label class="v"><input type="radio" name="ver" value="prova"><span><b>Chefe final · 10 questões</b><br>Formato da AV3, só com situações de treino. Cada questão vale 10 pontos.</span></label>
+   </fieldset>
+   <div class="field"><label for="nome">Nome completo</label><input id="nome" autocomplete="name" placeholder="Seu nome"></div>
+   <div class="field"><label for="turma">Turma</label><select id="turma"><option value="">Escolha sua turma</option><option value="4A Manhã">4A Manhã</option><option value="4B Manhã">4B Manhã</option><option value="4D Noite">4D Noite</option></select></div>
+   <p class="err" id="e-intro" role="alert"></p>
+   <button class="btn" id="b-start">► Iniciar</button>
+  </div>
+  <ul class="rules">
+   <li>Marque uma alternativa e confirme. O comentário com a justificativa aparece logo em seguida.</li>
+   <li>A resposta confirmada não pode ser trocada.</li>
+   <li>Alternativas e ordem das questões mudam a cada tentativa.</li>
+   <li>Ao terminar, a nota é gerada e entra no ranking, que mostra nome, sala e nota. Vale a sua melhor nota em cada versão.</li>
+  </ul>
+ </section>
+
+ <section id="s-quiz" class="wrap" hidden>
+  <div class="bar"><span id="who"></span><span id="pts"></span></div>
+  <div class="track" aria-hidden="true"><div class="fill" id="fill"></div></div>
+  <div class="card">
+   <div class="chips"><span class="chip" id="c-n"></span><span class="chip" id="c-t"></span><span class="chip" id="c-d"></span></div>
+   <p class="enun" id="enun"></p>
+   <ul class="opts" id="opts"></ul>
+   <div class="fb" id="fb" hidden><span class="v" id="fb-v"></span><p id="fb-c"></p></div>
+   <p class="err" id="e-q" role="alert"></p>
+   <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <button class="btn" id="b-ok">Confirmar</button>
+    <button class="btn" id="b-next" hidden>► Próxima</button>
+   </div>
+  </div>
+ </section>
+
+ <section id="s-end" class="wrap" hidden>
+  <p class="eyebrow" id="end-who"></p>
+  <h1>Fim de jogo</h1>
+  <div class="nota"><span id="nota">0</span><small> / 100</small></div>
+  <p class="lead" id="end-msg"></p>
+  <div class="card" id="save-card">
+   <h3>Registro no ranking</h3>
+   <p id="save-st">Salvando…</p>
+   <div id="save-fb" hidden class="field"><label for="txt">Não foi possível registrar. Copie este texto e envie ao professor:</label><textarea id="txt" readonly></textarea></div>
+  </div>
+  <h2>Desempenho por tema</h2>
+  <div class="scroll"><table><thead><tr><th>Tema</th><th>Acertos</th><th>Total</th><th>%</th></tr></thead><tbody id="tb"></tbody></table></div>
+  <h2>Questões para revisar</h2>
+  <div id="rev" class="wrap" style="gap:10px"></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="b-again">Fazer outra tentativa</button><button class="btn ghost" id="b-torank">Ver o ranking</button></div>
+ </section>
+
+ <section id="s-rank" class="wrap" hidden>
+  <p class="eyebrow">Biomecânica · AV3</p>
+  <h1>Hall da fama</h1>
+  <p class="lead">Melhor nota de cada aluno em cada versão. Empates são ordenados pelo menor tempo.</p>
+  <div class="card">
+   <div class="chips" role="tablist" aria-label="Versão" id="rk-tabs"></div>
+   <div class="field"><label for="rk-turma">Filtrar por sala</label><select id="rk-turma"><option value="">Todas as salas</option></select></div>
+   <p id="rk-st" aria-live="polite">Carregando…</p>
+   <div class="scroll"><table id="rk-t" hidden><thead><tr><th>#</th><th>Nome</th><th>Sala</th><th>Nota</th><th>Tempo</th></tr></thead><tbody id="rk-b"></tbody></table></div>
+  </div>
+ </section>
+</div>
+<script>
+const Q = [];
+function q(tema, nivel, enun, ok, errs, com){ Q.push({tema, nivel, enun, ok, errs, com}); }
+q("Cinemática","F","Um corredor completa uma volta em uma pista circular e retorna exatamente ao ponto de partida. Sobre sua velocidade média e sua rapidez média nessa volta:","a velocidade média é nula, mas a rapidez média não é nula",["as duas são nulas","as duas são iguais e diferentes de zero","a velocidade média é maior que a rapidez média","a rapidez média é nula, mas a velocidade média não é"],"Velocidade média é vetorial e depende do deslocamento (posição final − inicial). Como ele voltou ao ponto de partida, o deslocamento é zero e a velocidade média é zero. Rapidez média é escalar e depende da distância percorrida, que não é zero.");
+q("Cinemática","M","Dois alunos agacham até a mesma profundidade. O aluno B faz a descida na metade do tempo do aluno A. Em relação ao aluno A, a velocidade angular média do joelho de B é:","maior, pois o mesmo deslocamento angular ocorre em menos tempo",["menor, pois a amplitude foi a mesma","igual, pois a amplitude foi a mesma","nula, pois os dois chegam à mesma posição","impossível de comparar sem conhecer a carga"],"Velocidade angular média é o deslocamento angular dividido pelo tempo. Com o mesmo deslocamento angular do joelho em menos tempo, a velocidade angular é maior.");
+q("Cinemática","M","Em um sprint, a atleta parte do repouso, aumenta a velocidade nos primeiros metros e depois mantém velocidade constante em linha reta. Sobre a aceleração:","é positiva na arrancada e aproximadamente nula na fase de velocidade constante",["é nula na arrancada e positiva na fase de velocidade constante","é positiva durante toda a prova","é negativa na arrancada","é igual à velocidade em qualquer instante"],"Aceleração é a taxa de variação da velocidade. Na arrancada a velocidade aumenta (aceleração positiva); quando a velocidade se mantém constante, a variação é nula e a aceleração é nula.");
+q("Cinemática","F","Em uma repetição completa de supino, a barra sai do peito, sobe até os cotovelos estendidos e volta ao peito. Ao final dessa repetição, o deslocamento da barra é:","nulo, embora a distância percorrida seja diferente de zero",["igual à distância percorrida, cerca de 1 m","igual ao dobro da amplitude do movimento","negativo, porque a descida é a última fase","impossível de definir sem conhecer a carga"],"Deslocamento é a diferença entre a posição final e a inicial. A barra voltou ao mesmo ponto, então o deslocamento é zero. A distância percorrida (subida + descida) é diferente de zero. Isso também explica por que a velocidade média da repetição completa é zero.");
+q("Cinemática","F","Na análise de um movimento por vídeo, a velocidade angular de um segmento corporal é expressa, no Sistema Internacional, em:","radianos por segundo (rad/s)",["metros por segundo (m/s)","newton-metro (N·m)","quilograma-metro por segundo (kg·m/s)","metros por segundo ao quadrado (m/s²)"],"Ângulos no SI são medidos em radianos e o tempo em segundos, portanto a velocidade angular é dada em rad/s. m/s é velocidade linear; N·m é torque; kg·m/s é quantidade de movimento; m/s² é aceleração linear.");
+q("Cinemática","D","Dois atletas fazem salto vertical, saindo e aterrissando no mesmo ponto. O atleta A permanece mais tempo no ar do que o atleta B. Sem fazer cálculos, a conclusão mais adequada é:","A saltou mais alto, pois mais tempo de voo exige maior velocidade de decolagem",["B saltou mais alto, pois ficou menos tempo no ar","os dois saltaram à mesma altura, pois saíram e voltaram ao mesmo ponto","A saltou mais alto apenas se for mais pesado","o tempo de voo não tem relação com a altura do salto"],"Quanto maior a velocidade vertical de decolagem, mais tempo o atleta leva para subir e descer, e maior a altura alcançada. Por isso o tempo de voo, medido em vídeo, permite estimar a altura do salto.");
+q("Cinemática","M","Durante uma flexão de cotovelo, compare um ponto do antebraço perto do cotovelo e um ponto na mão. Ao longo da mesma flexão:","os dois têm o mesmo deslocamento angular, mas o ponto da mão percorre uma distância linear maior",["os dois percorrem a mesma distância linear","o ponto perto do cotovelo percorre maior distância linear","o ponto da mão tem deslocamento angular maior","nenhum dos pontos se desloca linearmente"],"Todos os pontos do segmento giram o mesmo ângulo. O deslocamento linear de cada ponto cresce com a distância ao eixo de rotação (s = r·θ), então o ponto mais distante, na mão, percorre mais.");
+q("Cinemática","M","Um atleta de força registra velocidade média muito baixa da barra no supino em uma determinada carga. Considerando a relação inversa entre carga e velocidade, essa carga provavelmente é:","alta, próxima do máximo individual",["leve, em torno de 30% de 1RM","impossível, pois toda repetição válida tem velocidade alta","igual à carga do aquecimento, pois a velocidade não depende da carga","isométrica, pois a barra quase não se move"],"Quanto maior a carga relativa, menor a velocidade possível da barra. Velocidades baixas (como 0,25 m/s) aparecem em cargas altas, perto de 1RM. O perfil é individual e específico do exercício.");
+q("Cinemática","D","Em uma série de agachamento medida por sensor, a velocidade média da barra cai de forma acentuada da primeira para a última repetição. Isso indica, principalmente:","fadiga acumulada e aproximação da falha muscular",["que a carga diminuiu durante a série","que o aluno melhorou a técnica","que o sensor deve ser descartado","que a relação carga-velocidade deixou de existir"],"A perda de velocidade ao longo da série é um indicador de fadiga e de proximidade da falha, e por isso é usada para controlar o esforço no treino por velocidade.");
+q("Instrumentos","F","Para medir a velocidade média propulsiva da barra a cada repetição, o instrumento mais adequado é:","um encoder linear (ou sensor de velocidade) fixado à barra",["um goniômetro universal","uma fita métrica","um dinamômetro de preensão manual","um plicômetro"],"Controle de carga por velocidade (VBT) exige medir a velocidade da barra, o que é feito por encoder linear, acelerômetro ou análise de vídeo. Goniômetro mede ângulo; fita mede comprimento; dinamômetro de preensão mede força de mão; plicômetro mede dobras cutâneas.");
+q("Torque","F","O torque (momento de força) produzido por uma força sobre uma articulação é calculado por:","força × distância perpendicular da linha de ação ao eixo (N·m)",["força × tempo de aplicação (N·s)","massa × aceleração (N)","força × deslocamento da carga (J)","massa × velocidade (kg·m/s)"],"Torque = F × d⊥, em N·m. Quanto maior a força ou o braço de momento (distância perpendicular da linha de ação até o eixo), maior o torque. Força × tempo é impulso; massa × aceleração é força; força × deslocamento é trabalho; massa × velocidade é quantidade de movimento.");
+q("Torque","M","Um aluno segura um halter com o antebraço na horizontal. Qual alteração aumenta o torque externo sobre o cotovelo?","afastar o halter do cotovelo, como segurando uma barra mais longa",["aproximar o halter do cotovelo","levantar o cotovelo, mantendo o antebraço horizontal e o halter à mesma distância","trocar o halter de mão","fazer a repetição em menos tempo sem mudar a posição"],"O torque é a força (o peso do halter) vezes a distância perpendicular da linha de ação ao eixo. Afastar o halter do cotovelo aumenta esse braço de momento. Mudar de mão ou a rapidez não altera a distância; levantar o cotovelo com o antebraço horizontal mantém a mesma distância horizontal.");
+q("Torque","M","Na rosca direta com halter, em qual posição do antebraço o torque externo gerado pelo peso do halter sobre o cotovelo é máximo?","Quando o antebraço está na horizontal",["Quando o cotovelo está totalmente estendido","Quando o antebraço está vertical, com a mão acima do cotovelo","Em todas as posições, pois o peso é constante","Quando o halter encosta no ombro"],"O peso é vertical. O braço de momento é a distância horizontal entre o cotovelo e o halter, que é máxima com o antebraço horizontal. Com o antebraço vertical, a linha de ação passa pelo eixo e o torque tende a zero. O peso é constante, mas o torque não.");
+q("Torque","D","Na elevação lateral com halteres, com os cotovelos estendidos, o torque externo no ombro ao elevar o braço de 0° (ao lado do corpo) até 90° (horizontal):","aumenta, pois o braço de momento cresce até ser máximo a 90°",["permanece constante, pois a carga é a mesma","diminui, pois o braço fica mais próximo do tronco","é máximo a 0° e nulo a 90°","é nulo durante todo o movimento"],"A 0°, o halter está alinhado com o eixo do ombro e a linha de ação do peso passa por ele (torque ≈ 0). Conforme o braço sobe, a distância horizontal até o halter aumenta, atingindo o máximo a 90°. É por isso que a elevação lateral é difícil no meio-fim do arco e fácil no início.");
+q("Torque","M","Em um agachamento frontal, a barra fica apoiada na frente dos ombros, e o tronco permanece mais vertical do que no agachamento com barra nas costas. Em comparação, o agachamento frontal tende a:","reduzir o torque no quadril e na lombar e aumentar a demanda sobre o joelho",["aumentar o torque no quadril e na lombar e reduzir o do joelho","manter iguais os torques de joelho, quadril e lombar","eliminar o torque no joelho","eliminar a participação dos glúteos"],"Com o tronco mais vertical, o braço de momento do quadril (e da coluna lombar) diminui, e o joelho avança mais, aumentando seu braço de momento. O torque não desaparece: ele se redistribui entre as articulações.");
+q("Torque","D","No levantamento terra, um aluno deixa a barra se afastar das canelas durante a puxada. Em relação à coluna lombar, isso:","aumenta o braço de momento da carga e, portanto, o torque na lombar",["reduz o braço de momento da carga e o torque na lombar","não altera o torque, pois o peso da barra é o mesmo","transforma o exercício em isométrico","aumenta o torque apenas no joelho"],"O peso da barra não muda, mas a distância horizontal entre a barra e o eixo da coluna/quadril aumenta. Como torque = F × d⊥, o torque lombar cresce. É a razão do conselho clássico de manter a barra próxima ao corpo.");
+q("Alavancas","F","A flexão do cotovelo realizada pelo bíceps braquial contra um halter na mão é, em geral, uma alavanca de:","terceira classe, pois a força muscular fica entre o eixo e a resistência",["primeira classe, pois o eixo fica entre a força e a resistência","segunda classe, pois a resistência fica entre o eixo e a força","terceira classe, pois o eixo fica entre a força e a resistência","classe indeterminada, pois o osso é flexível"],"No cotovelo, o eixo está na articulação, o bíceps se insere perto dele e o halter está na mão (longe). A força muscular fica entre o eixo e a resistência: 3ª classe. Esse arranjo favorece a velocidade e a amplitude, mas gera desvantagem mecânica de força.");
+q("Alavancas","M","Na elevação do calcanhar em pé (panturrilha), o eixo fica nas articulações metatarsofalângicas, o peso do corpo passa pelo tornozelo e o tríceps sural traciona o calcâneo. Esse sistema é uma alavanca de:","segunda classe, pois a resistência fica entre o eixo e a força muscular",["primeira classe, pois o eixo fica entre a força e a resistência","terceira classe, pois a força fica entre o eixo e a resistência","segunda classe, pois o eixo fica entre a resistência e a força","terceira classe, pois o peso do corpo é maior que a força muscular"],"A classe depende da ordem eixo–força–resistência. Aqui, a resistência (peso do corpo no tornozelo) está entre o eixo (antepé) e a força (tríceps sural no calcâneo): 2ª classe, que tem vantagem mecânica de força.");
+q("Alavancas","D","O bíceps se insere perto da articulação do cotovelo, enquanto o halter fica na mão, longe dela. Para sustentar o halter, a força muscular precisa ser:","maior que o peso do halter, pois o braço de força é menor que o braço da resistência",["menor que o peso do halter, pois o músculo é forte","igual ao peso do halter","nula, pois a ação é isométrica","independente da distância do halter"],"Em equilíbrio, os torques se igualam. Como o braço de força do bíceps é pequeno e o da resistência é grande, a força muscular precisa ser bem maior que a carga. É a desvantagem mecânica das alavancas de 3ª classe.");
+q("Torque","M","Na prancha apoiada nos antebraços, o aluno posiciona os cotovelos mais à frente dos ombros, afastando-os do quadril e dos pés. A dificuldade aumenta porque:","a linha de ação do peso corporal fica mais distante do eixo do ombro, aumentando o braço de momento",["o peso corporal aumenta quando os cotovelos avançam","a gravidade passa a atuar de lado","o exercício deixa de ser isométrico","o centro de massa sai do corpo"],"O peso é vertical e constante. Ao afastar o ponto de apoio do centro de massa, aumenta a distância horizontal entre os dois, o braço de momento e o torque que o ombro e o tronco precisam equilibrar.");
+q("Linha de ação","F","No supino inclinado, comparado ao supino reto, a barra (com a mesma carga) exerce uma força peso cuja linha de ação é:","sempre vertical; o que muda é a posição do ombro em relação a essa linha",["perpendicular ao banco","inclinada na mesma direção do banco","de menor módulo, pois o peso diminui com o ângulo","horizontal, para dentro do tronco"],"O peso é a atração gravitacional, sempre vertical. Ao inclinar o banco, o tronco muda de posição e, portanto, o braço de momento dos músculos do ombro em relação a essa linha vertical. Isso altera a demanda muscular, não o peso.");
+q("Linha de ação","M","Na remada na polia baixa, o cabo está preso a uma polia próxima ao chão. Em relação a um halter, a linha de ação da resistência no cabo:","acompanha a direção do cabo e não é necessariamente vertical",["é sempre vertical, como a do halter","é sempre horizontal","não existe, pois a polia elimina a resistência","muda o peso das anilhas"],"Com halteres e barras, a resistência vem do peso (vertical). Em cabos, a direção da força é a do cabo, que depende da posição da polia. Isso permite escolher onde a resistência é mais exigente no arco do movimento.");
+q("Linha de ação","D","Um aluno faz rosca com halter e outro faz rosca em cabo (polia baixa). Perto do topo, com a mão próxima ao ombro, o halter fica quase sem exigência, mas o cabo ainda gera tensão. Isso ocorre porque:","a linha de ação do halter passa perto do eixo do cotovelo, e a do cabo continua afastada dele",["o halter perde peso no alto do movimento","o cabo tem massa maior que o halter","o bíceps não atua no topo com halter","o cabo elimina a ação da gravidade"],"Com o halter, a força é vertical e, no topo, passa perto do cotovelo, deixando o torque pequeno. No cabo, a direção da força é a do cabo, mantendo braço de momento e torque no fim da flexão. A gravidade continua agindo no cabo e no halter.");
+q("Tempo sob tensão","M","Dois alunos fazem 8 repetições com a mesma carga. O aluno A usa cadência 3-1-2-0 e o aluno B usa 1-0-1-0. Sobre o tempo sob tensão da série:","é maior no aluno A, pois cada repetição dura mais",["é igual, pois o número de repetições é o mesmo","é maior no aluno B, pois ele trabalha mais rápido","é nulo no aluno A, pois há pausa","depende apenas da carga"],"O tempo sob tensão é a soma da duração de todas as fases da série. Com o mesmo número de repetições, cadência mais lenta resulta em mais tempo sob tensão. Repetições iguais não significam TST igual.");
+q("Tempo sob tensão","M","Em uma repetição com pausa de 1 s na posição mais baixa, com a barra sustentada pelo aluno, esse tempo da pausa:","conta como tempo sob tensão, pois o músculo continua produzindo força isometricamente",["não conta, pois a pausa é descanso","só conta se a pausa passar de 5 s","não conta, pois o torque é nulo na pausa","conta apenas como fase excêntrica"],"Se o aluno sustenta a carga, o músculo está gerando tensão (ação isométrica), então a pausa entra no tempo sob tensão. Se a barra fosse apoiada e a carga retirada do músculo, seria diferente.");
+q("Tempo sob tensão","D","Sobre o tempo sob tensão (TST) e a hipertrofia, a leitura mais coerente com a evidência discutida é:","maior TST não garante maior hipertrofia; volume, esforço e carga costumam pesar mais",["quanto maior o TST, sempre maior a hipertrofia","só cadências lentas (4 s ou mais por fase) produzem hipertrofia","o TST deve ficar abaixo de 20 s para qualquer objetivo","o TST é irrelevante para o torque muscular"],"As faixas de TST são heurísticas de prescrição, não limiares fisiológicos. Descer devagar não é necessário para hipertrofia, e prolongar o TST reduz a carga que se consegue usar. O que mais explica o resultado é o volume semanal, a proximidade da falha e a progressão.");
+q("Impulso","F","Em uma arrancada, o treinador pede que o atleta \"empurre o chão por mais tempo\" nos primeiros apoios. Esse pedido se relaciona ao conceito de:","impulso: força aplicada ao longo do tempo, que altera a quantidade de movimento",["inércia: quanto maior a massa, menor a força necessária","pressão: quanto maior a área do pé, maior a velocidade","atrito mínimo entre o pé e o chão","equilíbrio estático das forças"],"Impulso = força × tempo = variação da quantidade de movimento (m·v). Aplicar força maior ou por mais tempo aumenta a velocidade final do corpo. Na arrancada, o atrito é necessário (sem ele o pé escorrega).");
+q("Impulso","M","Dois atletas aplicam ao solo a mesma força média durante o salto. O atleta A empurra o solo por mais tempo do que o atleta B. Em relação a B, o atleta A:","gera maior impulso e maior variação da quantidade de movimento",["gera menor impulso","gera o mesmo impulso","gera impulso nulo","gera maior impulso, mas sem alterar a quantidade de movimento"],"Impulso é força vezes tempo. Com a mesma força por mais tempo, o impulso é maior, e impulso é igual à variação da quantidade de movimento. Para atletas de mesma massa, isso significa maior velocidade de decolagem.");
+q("Impulso","M","Dois atletas, de massas diferentes, partem do repouso e recebem o mesmo impulso líquido. Depois do impulso, qual deles terá maior velocidade?","o de menor massa",["o de maior massa","os dois, com a mesma velocidade","nenhum, pois partiram do repouso","o que tiver maior estatura"],"O impulso é igual à variação da quantidade de movimento (massa × velocidade). Com o mesmo impulso, o corpo de menor massa terá maior variação de velocidade.");
+q("Leis de Newton","M","Na aterrissagem de um salto, o solo aplica no atleta uma força vertical de pico de 2.500 N. Pela terceira lei de Newton, o atleta aplica no solo uma força:","de 2.500 N, para baixo",["de 2.500 N, para cima","menor, porque o solo é mais rígido","nula, porque o solo não se move","maior, porque o atleta está acelerando"],"Ação e reação têm o mesmo módulo, sentidos opostos e atuam em corpos diferentes. Se o solo empurra o atleta para cima com 2.500 N, o atleta empurra o solo para baixo com 2.500 N.");
+q("Leis de Newton","D","Ao tirar uma barra do chão com aceleração para cima, a força vertical que o atleta aplica à barra é, em relação ao peso da barra:","maior, pois precisa vencer o peso e ainda acelerar a barra",["igual, pois a barra sobe","menor, pois o atleta se ajuda com o impulso do corpo","nula, pois a barra sobe por inércia","igual à força do solo sobre o atleta"],"Pela segunda lei de Newton, para a barra acelerar para cima a força resultante precisa apontar para cima: a força do atleta tem que superar o peso. Se fosse igual ao peso, a barra subiria com velocidade constante ou ficaria parada.");
+q("Força de reação do solo","F","A força de reação do solo (FRS) é:","a força que o solo aplica sobre o corpo em resposta à força que o corpo aplica sobre ele",["a força peso do corpo, sempre igual a m·g","o atrito entre o calçado e o piso, apenas","a força que o corpo aplica ao solo, mas só na corrida","a pressão do pé dividida pela área"],"A FRS é a reação do solo (3ª lei de Newton) e pode ser medida em plataforma de força. Ela tem componentes vertical, ântero-posterior e médio-lateral, e só é igual ao peso quando o corpo está parado.");
+q("Força de reação do solo","M","Na fase de apoio da corrida, o pico da força de reação do solo vertical, em comparação com o peso corporal do atleta, é:","várias vezes maior que o peso",["menor que o peso","igual ao peso","nulo","metade do peso"],"Na corrida, o apoio gera picos de força vertical que costumam ser algumas vezes o peso corporal. Por isso a corrida impõe carga de impacto maior que a caminhada.");
+q("Força de reação do solo","D","Em um salto vertical, em qual momento a FRS vertical é maior que o peso corporal?","Na propulsão, quando o centro de massa acelera para cima",["Na fase de voo, quando o atleta está no ar","Quando o atleta está parado em pé antes do salto","Na altura máxima do salto","Em nenhum momento, pois a FRS é igual ao peso"],"Se a FRS é maior que o peso, a força resultante aponta para cima e o centro de massa acelera para cima (propulsão). Em pé parado, FRS = peso; no voo, a FRS é zero, pois o pé não toca o solo.");
+q("Trabalho e potência","M","Ao levantar uma barra, o trabalho mecânico realizado sobre ela depende:","da força aplicada e do deslocamento da barra",["apenas do tempo gasto","apenas da velocidade da barra","apenas da cadência","da massa do aluno, e não da barra"],"Trabalho = força × deslocamento na direção da força. O tempo não entra no trabalho; ele entra na potência (trabalho ÷ tempo).");
+q("Trabalho e potência","M","O aluno A e o aluno B levantam a mesma barra, na mesma altura. O aluno A sobe mais rápido que o aluno B. Sobre trabalho e potência média:","o trabalho é igual e a potência média é maior em A",["o trabalho e a potência são iguais","o trabalho é maior em A e a potência é igual","o trabalho é maior em B porque dura mais","a potência é maior em B porque gasta mais tempo"],"O trabalho depende da força e do deslocamento, que são iguais. Potência é trabalho dividido pelo tempo; como A leva menos tempo, sua potência média é maior.");
+q("Trabalho e potência","F","Um aluno segura uma barra parada à frente do corpo por 20 s, com grande esforço. Em termos mecânicos, o trabalho realizado sobre a barra é:","nulo, pois não há deslocamento da barra",["igual a F × 20 s","igual ao peso da barra","maior do que na subida","negativo, porque a barra desce"],"Trabalho mecânico = força × deslocamento na direção da força. Sem deslocamento, o trabalho sobre a barra é zero, embora a musculatura consuma energia e esteja sob tensão (isometria).");
+q("Trabalho e potência","D","No ponto mais alto de um salto vertical (desconsiderando movimentos horizontais), a energia do atleta é:","cinética praticamente nula e potencial gravitacional máxima",["cinética máxima e potencial nula","cinética e potencial iguais a zero","potencial mínima e cinética máxima","constante e igual à do início do salto"],"No ápice, a velocidade vertical é zero (energia cinética ≈ 0) e a altura é máxima (potencial máxima). Na decolagem, ocorre o oposto: a energia é toda cinética.");
+q("Tipos de resistência","M","No agachamento, um treinador prende elásticos ao chão e à barra. À medida que o atleta sobe, os elásticos esticam. O efeito é:","aumentar a resistência ao longo da subida, junto com a melhora da vantagem mecânica",["reduzir a resistência no fim da subida","manter a resistência constante, como no peso livre","eliminar a fase excêntrica","aumentar a resistência apenas na parte mais baixa"],"A força elástica cresce com o alongamento. No agachamento, a parte mais difícil costuma ser a saída do fundo, e o fim da subida é mais fácil mecanicamente. Elásticos (e correntes) adicionam carga onde o atleta é mais forte, acomodando a curva de força.");
+q("Tipos de resistência","M","Máquinas com cames (excêntricos) alteram a resistência ao longo do arco. O objetivo mecânico é:","ajustar a resistência à curva de força do movimento",["eliminar o torque articular","tornar o peso da anilha variável","eliminar a participação de músculos estabilizadores","reduzir o número de repetições possíveis"],"O came muda o braço de momento da resistência durante o arco, aproximando a demanda da curva de força humana. Reduz a demanda de estabilizadores, mas não elimina nem altera o peso da anilha em si.");
+q("Tipos de resistência","M","Com peso livre, a carga é constante, mas a dificuldade percebida varia ao longo do movimento. Isso acontece porque:","o braço de momento da carga em relação à articulação muda com o ângulo",["o peso da barra muda durante a repetição","a gravidade varia com a altura","a velocidade é sempre constante","os músculos mudam de massa durante o arco"],"A força (peso) é constante, mas o torque = F × d⊥ varia com a posição dos segmentos. Por isso, o mesmo halter é mais difícil em certos ângulos e mais fácil em outros.");
+q("Tipos de resistência","F","Em um equipamento isocinético, a característica principal é:","velocidade angular constante, com resistência que se ajusta à força aplicada",["carga constante, definida pelas anilhas","resistência que cresce com a deformação do elástico","ausência de resistência durante a fase excêntrica","movimento sem velocidade"],"No modo isocinético, o equipamento mantém a velocidade constante e a resistência acomoda a força do usuário em cada ponto do arco. Por isso é muito usado em avaliação e reabilitação.");
+q("Evidência","D","Um aluno pergunta se a pegada mais aberta no supino \"ativa mais o peitoral e, por isso, gera mais hipertrofia\". A resposta mais coerente com a evidência é:","as diferenças de EMG são pequenas e agudas; não há demonstração de hipertrofia maior, e a escolha deve considerar amplitude, conforto e objetivo",["sim, EMG maior sempre prova maior hipertrofia","não, a largura da pegada não altera nenhuma variável biomecânica","sim, pois a pegada aberta aumenta o peso da barra","não, pois o peitoral não atua no supino"],"Alterar a pegada muda braços de momento e a amplitude, mas EMG aguda não prova ganho crônico de massa. Os estudos mostram diferenças pequenas e inconsistentes. A escolha deve considerar conforto, amplitude e objetivo.");
+q("Músculo","D","Na cadeira extensora (sentado, quadril flexionado), em relação à posição deitada com quadril estendido, o reto femoral (biarticular):","fica alongado pela flexão do quadril, mudando sua relação comprimento-tensão",["fica encurtado pela flexão do quadril e perde toda a tensão","deixa de participar da extensão do joelho","não é afetado pela posição do quadril","passa a atuar só na articulação do quadril"],"O reto femoral cruza quadril e joelho. Com o quadril flexionado, ele já está alongado na origem, o que altera o comprimento em que trabalha na extensão do joelho. A posição do quadril interfere sim no comprimento muscular e na tensão que ele consegue produzir.");
+q("Músculo","M","Na insuficiência ativa de um músculo biarticular, a perda de capacidade de gerar força ocorre porque:","o músculo está encurtado nas duas articulações, em comprimento muito reduzido",["o músculo está esticado ao máximo e não produz nenhuma força","o músculo perde massa durante o exercício","o tendão se rompe","o músculo passa a atuar só em uma articulação, aumentando a força"],"Quando um biarticular é encurtado simultaneamente em suas duas articulações, ele chega a comprimentos em que o sobrepasse dos filamentos de actina e miosina limita a tensão ativa. É diferente da insuficiência passiva, que ocorre quando ele é alongado nas duas.");
+q("Músculo","M","Um aluno consegue controlar na descida uma carga maior do que consegue levantar na subida. Isso se explica porque, na mesma velocidade, o músculo:","produz mais força na ação excêntrica do que na concêntrica",["produz menos força na ação excêntrica","perde a capacidade de produzir tensão","está em ação isométrica na descida","não gasta energia na descida"],"A relação força-velocidade mostra que, em ação excêntrica, a força que o músculo produz é maior do que em ação concêntrica na mesma velocidade. Por isso se controla uma carga maior descendo do que subindo.");
+q("Evidência","F","Sobre a amplitude de movimento (ADM) no treinamento de força, a afirmação mais coerente com a evidência para hipertrofia é:","a ADM parcial em posições alongadas pode produzir hipertrofia semelhante ou superior em alguns músculos",["só a amplitude completa produz hipertrofia","ADM parcial nunca funciona","quanto menor a ADM, maior a hipertrofia em qualquer exercício","a ADM não altera o torque muscular"],"Estudos e meta-análises indicam que a amplitude completa não é a única via: parciais em comprimento longo podem render resultado semelhante ou melhor, dependendo do músculo e do exercício. A ADM também altera o torque e a especificidade do treino.");
+q("Evidência","M","Sobre a falha muscular na hipertrofia, a recomendação mais coerente é:","não é obrigatória; deixar cerca de 2 a 3 repetições em reserva costuma bastar",["é obrigatória em todas as séries","deve ser evitada em qualquer caso","só vale para exercícios com máquina","é necessária para que o músculo cresça em qualquer série"],"Revisões e posicionamentos recentes indicam que a proximidade da falha importa, mas ir até a falha em toda série não é necessário. Séries a 2–3 repetições em reserva costumam permitir volume maior com bom estímulo.");
+q("Evidência","M","Sobre carga e hipertrofia, a afirmação mais coerente com a evidência é:","cargas leves e pesadas levam a hipertrofia semelhante quando próximas da falha; força máxima favorece cargas altas",["só cargas acima de 80% de 1RM geram hipertrofia","só cargas leves geram hipertrofia","a zona de 8 a 12 repetições é a única que funciona","a carga não influencia nenhuma adaptação"],"Existe ampla faixa de cargas (de ~30% a 80% de 1RM, perto da falha) que produz hipertrofia parecida. Para força máxima, cargas ≥ 80% de 1RM favorecem mais, por especificidade. A \"zona de 8–12\" não é um limite fisiológico.");
+q("Evidência","D","Uma meta-análise compara treino excêntrico com concêntrico e traz diferença média pequena, com intervalo de confiança de 95% que inclui o zero e certeza da evidência (GRADE) baixa. A interpretação correta é:","não se pode concluir superioridade; a evidência é incerta",["a excêntrica é claramente superior","a concêntrica é claramente superior","o resultado prova que não há nenhuma diferença","o estudo deve ser descartado por ser meta-análise"],"Quando o IC de 95% inclui o zero, o dado é compatível com benefício, nenhum efeito ou prejuízo. Com certeza GRADE baixa, os resultados podem mudar com novos estudos. Não significa \"prova de ausência de efeito\", e sim incerteza.");
+(function(){
+const $=id=>document.getElementById(id);
+const L=["A","B","C","D","E"];
+const VER={completa:{nome:"Completa",idx:null},
+ curta:{nome:"Curta",idx:[1,2,4,6,8,9,12,13,14,15,16,17,19,21,23,25,26,28,29,31,33,34,35,37,39,43,44,46,47,50].map(x=>x-1)},
+ prova:{nome:"Prova",idx:[12,15,16,21,23,25,29,39,44,8].map(x=>x-1)}};
+function ids(v){return VER[v].idx||Q.map((_,i)=>i)}
+function fmt(n){return (Math.round(n*10)/10).toString().replace(".",",")}
+function slug(t){return t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")}
+function mmss(sec){return Math.floor(sec/60)+"min "+String(sec%60).padStart(2,"0")+"s"}
+const API_URL="https://script.google.com/macros/s/AKfycbyOPeMncwEu2erzI_degB_YlYmsHERnUcvubWmwPbp-bytRwQYg15Oe_8Zbx8iL3TZw6w/exec";
+const OK_API=()=>/^https:\/\/script\.google\.com\//.test(API_URL);
+let st=null;
+
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function lv(n){return n==="F"?"Fácil":n==="M"?"Médio":"Difícil"}
+function show(id){["s-intro","s-quiz","s-end","s-rank"].forEach(s=>$(s).hidden=(s!==id));
+  $("n-sim").setAttribute("aria-current",id==="s-rank"?"false":"page");
+  $("n-rank").setAttribute("aria-current",id==="s-rank"?"page":"false");window.scrollTo(0,0)}
+
+try{const n=localStorage.getItem("sim_nome"),t=localStorage.getItem("sim_turma");if(n)$("nome").value=n;if(t&&["4A Manhã","4B Manhã","4D Noite"].includes(t))$("turma").value=t}catch(e){}
+
+$("b-start").onclick=()=>{
+  const nome=$("nome").value.trim(), turma=$("turma").value.trim();
+  if(nome.split(/\s+/).length<2||nome.length<5){$("e-intro").textContent="Informe seu nome completo.";return}
+  if(!turma){$("e-intro").textContent="Escolha sua turma.";return}
+  $("e-intro").textContent="";
+  try{localStorage.setItem("sim_nome",nome);localStorage.setItem("sim_turma",turma)}catch(e){}
+  const ver=(document.querySelector('input[name="ver"]:checked')||{value:"completa"}).value;
+  const ordem=shuffle(ids(ver)).map(i=>{
+    const q=Q[i];
+    const opts=shuffle([{t:q.ok,c:true}].concat(q.errs.map(t=>({t,c:false}))));
+    return {i,opts};
+  });
+  st={ver,nome,turma,ordem,pos:0,ac:0,resp:[],sel:null,done:false,t0:Date.now()};
+  show("s-quiz");render();
+};
+
+function render(){
+  const o=st.ordem[st.pos], q=Q[o.i];
+  st.sel=null;st.done=false;
+  $("who").textContent=st.nome+" · "+st.turma+" · "+VER[st.ver].nome;
+  $("pts").textContent="Pontos: "+fmt(st.ac*100/st.ordem.length)+" de "+fmt(st.pos*100/st.ordem.length)+" respondidos";
+  $("fill").style.width=(st.pos/st.ordem.length*100)+"%";
+  $("c-n").textContent="Questão "+(st.pos+1)+" de "+st.ordem.length;
+  $("c-t").textContent=q.tema;$("c-d").textContent=lv(q.nivel);
+  $("enun").textContent=q.enun;
+  const ul=$("opts");ul.innerHTML="";
+  o.opts.forEach((op,k)=>{
+    const li=document.createElement("li");const b=document.createElement("button");
+    b.type="button";b.className="opt";b.setAttribute("aria-pressed","false");
+    b.innerHTML='<span class="l"></span><span class="t"></span><span class="tag"></span>';
+    b.children[0].textContent=L[k]+")";b.children[1].textContent=op.t;
+    b.onclick=()=>{if(st.done)return;st.sel=k;[...ul.querySelectorAll(".opt")].forEach((x,j)=>x.setAttribute("aria-pressed",j===k?"true":"false"));$("e-q").textContent=""};
+    li.appendChild(b);ul.appendChild(li);
+  });
+  $("fb").hidden=true;$("b-ok").hidden=false;$("b-next").hidden=true;$("e-q").textContent="";
+}
+
+$("b-ok").onclick=()=>{
+  if(st.sel===null){$("e-q").textContent="Escolha uma alternativa antes de confirmar.";return}
+  const o=st.ordem[st.pos], q=Q[o.i], ok=o.opts[st.sel].c;
+  st.done=true;if(ok)st.ac++;
+  st.resp.push({q:o.i,ok:ok,tema:q.tema,nivel:q.nivel,marcada:o.opts[st.sel].t});
+  [...$("opts").querySelectorAll(".opt")].forEach((b,j)=>{
+    b.disabled=true;
+    const tag=b.querySelector(".tag");
+    if(o.opts[j].c){b.classList.add("right");tag.textContent="✓ Correta"}
+    else if(j===st.sel){b.classList.add("wrong");tag.textContent="✗ Sua resposta"}
+  });
+  $("fb").className="fb"+(ok?"":" bad");
+  const pv=fmt(100/st.ordem.length);$("fb-v").textContent=ok?"Acertou! +"+pv+" pontos":"Errou! 0 ponto";
+  $("fb-c").textContent=q.com;
+  $("fb").hidden=false;$("b-ok").hidden=true;
+  $("pts").textContent="Pontos: "+fmt(st.ac*100/st.ordem.length)+" de "+fmt((st.pos+1)*100/st.ordem.length)+" respondidos";
+  $("fill").style.width=((st.pos+1)/st.ordem.length*100)+"%";
+  const nx=$("b-next");nx.hidden=false;nx.textContent=st.pos===st.ordem.length-1?"► Ver minha nota":"► Próxima";nx.focus();
+};
+$("b-next").onclick=()=>{
+  if(st.pos===st.ordem.length-1){finish()}else{st.pos++;render();window.scrollTo(0,0)}
+};
+
+async function finish(){
+  const N=st.ordem.length;const nota=Math.round(st.ac*1000/N)/10;
+  show("s-end");
+  $("end-who").textContent=st.nome+" · "+st.turma+" · Versão "+VER[st.ver].nome;
+  $("nota").textContent=fmt(nota);
+  $("end-msg").textContent=st.ac+" acertos em "+N+" questões."+(nota>=70?" Bom desempenho. Revise os pontos abaixo e siga firme.":" Use os comentários abaixo para revisar os temas com menos acertos antes da prova.");
+  const by={};st.resp.forEach(r=>{(by[r.tema]=by[r.tema]||{a:0,t:0});by[r.tema].t++;if(r.ok)by[r.tema].a++});
+  const tb=$("tb");tb.innerHTML="";
+  Object.keys(by).sort((a,b)=>by[a].a/by[a].t-by[b].a/by[b].t).forEach(k=>{
+    const tr=document.createElement("tr");
+    [k,by[k].a,by[k].t,Math.round(by[k].a/by[k].t*100)+"%"].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.appendChild(td)});
+    tb.appendChild(tr);
+  });
+  const rev=$("rev");rev.innerHTML="";
+  const erradas=st.resp.filter(r=>!r.ok);
+  if(!erradas.length){const p=document.createElement("p");p.textContent="Você acertou tudo. Nada para revisar.";rev.appendChild(p)}
+  erradas.forEach(r=>{
+    const q=Q[r.q];const d=document.createElement("details");
+    const s=document.createElement("summary");s.textContent=q.tema+": "+q.enun.slice(0,90)+(q.enun.length>90?"…":"");
+    const p1=document.createElement("p");p1.textContent=q.enun;
+    const p2=document.createElement("p");p2.innerHTML="<b>Resposta correta:</b> ";p2.appendChild(document.createTextNode(q.ok));
+    const p3=document.createElement("p");p3.innerHTML="<b>Você marcou:</b> ";p3.appendChild(document.createTextNode(r.marcada));
+    const p4=document.createElement("p");p4.textContent=q.com;
+    d.append(s,p1,p2,p3,p4);rev.appendChild(d);
+  });
+  await save(nota,by);
+}
+
+async function save(nota,by){
+  const reg={nome:st.nome,turma:st.turma,versao:st.ver,nota:nota,acertos:st.ac,total:st.ordem.length,
+    duracaoSeg:Math.round((Date.now()-st.t0)/1000),criadoEm:new Date().toISOString(),tentativas:1,
+    porTema:by,respostas:st.resp.map(r=>({q:r.q+1,ok:r.ok}))};
+  const fail=()=>{
+    $("save-st").textContent="A nota não foi registrada no ranking.";
+    $("txt").value="Simulado AV3 Biomecânica ("+VER[st.ver].nome+")\nNome: "+st.nome+"\nTurma: "+st.turma+"\nNota: "+fmt(nota)+"/100 ("+st.ac+" acertos)\nData: "+new Date().toLocaleString("pt-BR");
+    $("save-fb").hidden=false;
+  };
+  try{
+    if(!OK_API()){fail();return}
+    const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(reg)});
+    const j=await r.json();
+    if(!j.ok)throw new Error(j.erro||"erro");
+    $("save-st").textContent=j.status==="mantida"?"Sua melhor nota anterior ("+fmt(j.melhor)+") foi mantida no ranking."
+      :j.status==="melhor"?"Nova melhor nota registrada no ranking.":"Nota registrada no ranking.";
+  }catch(e){fail()}
+}
+
+// ---------- ranking ----------
+let rkVer="completa",rkDocs=[];
+function rkTabs(){
+  const t=$("rk-tabs");t.innerHTML="";
+  Object.keys(VER).forEach(k=>{const b=document.createElement("button");b.type="button";b.className="tab";b.setAttribute("role","tab");
+    b.setAttribute("aria-selected",k===rkVer?"true":"false");b.textContent=VER[k].nome+" ("+ids(k).length+")";
+    b.onclick=()=>{rkVer=k;rkTabs();rkRender()};t.appendChild(b)});
+}
+function rkRender(){
+  const f=$("rk-turma").value;
+  let r=rkDocs.filter(d=>d.versao===rkVer);
+  const sel=$("rk-turma"),cur=sel.value;
+  const turmas=[...new Set(rkDocs.map(d=>d.turma))].sort((a,b)=>a.localeCompare(b,"pt-BR"));
+  sel.innerHTML='<option value="">Todas as salas</option>';
+  turmas.forEach(t=>{const o=document.createElement("option");o.value=t;o.textContent=t;sel.appendChild(o)});sel.value=turmas.includes(cur)?cur:"";
+  if(sel.value)r=r.filter(d=>d.turma===sel.value);
+  r.sort((a,b)=>b.nota-a.nota||a.duracaoSeg-b.duracaoSeg);
+  const tb=$("rk-b");tb.innerHTML="";
+  $("rk-t").hidden=!r.length;
+  if(!rkDocs.length&&$("rk-st").textContent==="Carregando…")return;
+  $("rk-st").textContent=r.length?r.length+" aluno(s) no ranking.":"Ainda não há notas nesta versão. Faça o simulado para abrir o ranking.";
+  const me=st&&slug(st.nome)+"|"+slug(st.turma);
+  r.forEach((d,i)=>{
+    const tr=document.createElement("tr");
+    if(me&&slug(d.nome)+"|"+slug(d.turma)===me)tr.className="me";
+    [(i+1)+"º",d.nome,d.turma,fmt(d.nota),mmss(d.duracaoSeg)].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.appendChild(td)});
+    tb.appendChild(tr);
+  });
+}
+let rkTimer=null;
+async function rkLoad(){
+  if(!OK_API()){$("rk-st").textContent="O ranking ainda não foi conectado à planilha.";return}
+  try{
+    const r=await fetch(API_URL+"?acao=ranking&t="+Date.now());const j=await r.json();
+    rkDocs=(j.linhas||[]).map(d=>({nome:String(d.nome),turma:String(d.turma),versao:String(d.versao),nota:Number(d.nota),duracaoSeg:Number(d.duracaoSeg)}));
+    rkRender();
+  }catch(e){$("rk-st").textContent="Não foi possível carregar o ranking. Tente de novo em instantes."}
+}
+function openRank(){
+  show("s-rank");rkTabs();rkRender();rkLoad();
+  clearInterval(rkTimer);rkTimer=setInterval(()=>{if(!$("s-rank").hidden)rkLoad()},30000);
+}
+$("n-rank").onclick=openRank;$("b-torank").onclick=openRank;$("rk-turma").onchange=rkRender;
+$("n-sim").onclick=()=>{if(st&&!st.done&&!$("s-quiz").hidden)return;show(st&&$("s-end")&&st.resp.length===st.ordem.length?"s-end":"s-intro")};
+if(location.hash==="#ranking")openRank();
+$("b-again").onclick=()=>{st=null;show("s-intro")};
+})();
+</script></body></html>
