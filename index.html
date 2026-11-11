@@ -1,7 +1,6 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Simulado AV3 Biomecânica</title>
-
+<title>Simulado AV3</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
 /* Layout: caixas de diálogo de RPG de 16 bits, branco com preto e vermelho, bordas duplas e sombras duras */
@@ -92,22 +91,24 @@ body{overflow-x:hidden}
 </head><body>
 <div class="wrap" id="app">
  <nav class="nav" aria-label="Seções"><button class="tab" id="n-sim" aria-current="page">Simulado</button><button class="tab" id="n-rank">Ranking</button></nav>
+
  <section id="s-intro" class="wrap" style="gap:20px">
   <div class="title">
    <svg class="mascote" viewBox="0 0 28 14" shape-rendering="crispEdges" role="img" aria-label="Halter em pixel art"><rect x="1" y="3" width="3" height="8" fill="#D40000"/><rect x="5" y="1" width="3" height="12" fill="#D40000"/><rect x="9" y="6" width="10" height="2" fill="#000"/><rect x="20" y="1" width="3" height="12" fill="#D40000"/><rect x="24" y="3" width="3" height="8" fill="#D40000"/></svg>
    <p class="eyebrow">Revisão para a AV3</p>
-   <h1>Simulado de Biomecânica</h1>
+   <h1>Simulado AV3</h1>
    <p class="autor">Prof. Túlio G. Martins-Guimarães</p>
   </div>
-  <p class="lead">Questões de múltipla escolha com situações de treino e conceitos, sem cálculos, no estilo da sua prova. Escolha entre três versões. Em todas, a nota vai de 0 a 100.</p>
+  <p class="lead">Escolha a disciplina, a turma e a fase. Cada fase tem questões de múltipla escolha com situações de treino, caso e conceito, no estilo da sua prova. Em todas, a nota vai de 0 a 100.</p>
   <div class="card">
+   <div class="field"><label for="disc">Disciplina</label><select id="disc"><option value="">Escolha a disciplina</option></select></div>
+   <div class="field"><label for="turma">Turma</label><select id="turma" disabled><option value="">Escolha antes a disciplina</option></select></div>
    <fieldset class="vers"><legend>Escolha a fase</legend>
     <label class="v"><input type="radio" name="ver" value="completa" checked><span><b>Aventura completa · 50 questões</b><br>Revisão geral. Cada questão vale 2 pontos.</span></label>
     <label class="v"><input type="radio" name="ver" value="curta"><span><b>Missão rápida · 30 questões</b><br>Todos os temas em formato reduzido. Cada questão vale 3,33 pontos.</span></label>
-    <label class="v"><input type="radio" name="ver" value="prova"><span><b>Chefe final · 10 questões</b><br>Formato da AV3, só com situações de treino. Cada questão vale 10 pontos.</span></label>
+    <label class="v"><input type="radio" name="ver" value="prova"><span><b>Chefe final · 10 questões</b><br>Formato da AV3, com casos e situações. Cada questão vale 10 pontos.</span></label>
    </fieldset>
    <div class="field"><label for="nome">Nome completo</label><input id="nome" autocomplete="name" placeholder="Seu nome"></div>
-   <div class="field"><label for="turma">Turma</label><select id="turma"><option value="">Escolha sua turma</option><option value="4A Manhã">4A Manhã</option><option value="4B Manhã">4B Manhã</option><option value="4D Noite">4D Noite</option></select></div>
    <p class="err" id="e-intro" role="alert"></p>
    <button class="btn" id="b-start">► Iniciar</button>
   </div>
@@ -115,7 +116,7 @@ body{overflow-x:hidden}
    <li>Marque uma alternativa e confirme. O comentário com a justificativa aparece logo em seguida.</li>
    <li>A resposta confirmada não pode ser trocada.</li>
    <li>Alternativas e ordem das questões mudam a cada tentativa.</li>
-   <li>Ao terminar, a nota é gerada e entra no ranking, que mostra nome, sala e nota. Vale a sua melhor nota em cada versão.</li>
+   <li>Ao terminar, a nota é gerada e entra no ranking, que mostra nome, sala e nota. Vale a sua melhor nota em cada disciplina e fase.</li>
   </ul>
  </section>
 
@@ -153,11 +154,12 @@ body{overflow-x:hidden}
  </section>
 
  <section id="s-rank" class="wrap" hidden>
-  <p class="eyebrow">Biomecânica · AV3</p>
+  <p class="eyebrow">Revisão para a AV3</p>
   <h1>Hall da fama</h1>
-  <p class="lead">Melhor nota de cada aluno em cada versão. Empates são ordenados pelo menor tempo.</p>
+  <p class="lead">Melhor nota de cada aluno por disciplina e fase. Empates são ordenados pelo menor tempo.</p>
   <div class="card">
-   <div class="chips" role="tablist" aria-label="Versão" id="rk-tabs"></div>
+   <div class="field"><label for="rk-disc">Disciplina</label><select id="rk-disc"></select></div>
+   <div class="chips" role="tablist" aria-label="Fase" id="rk-tabs"></div>
    <div class="field"><label for="rk-turma">Filtrar por sala</label><select id="rk-turma"><option value="">Todas as salas</option></select></div>
    <p id="rk-st" aria-live="polite">Carregando…</p>
    <div class="scroll"><table id="rk-t" hidden><thead><tr><th>#</th><th>Nome</th><th>Sala</th><th>Nota</th><th>Tempo</th></tr></thead><tbody id="rk-b"></tbody></table></div>
@@ -165,8 +167,7 @@ body{overflow-x:hidden}
  </section>
 </div>
 <script>
-const Q = [];
-function q(tema, nivel, enun, ok, errs, com){ Q.push({tema, nivel, enun, ok, errs, com}); }
+(function(){const Q=[];function q(tema,nivel,enun,ok,errs,com){Q.push({tema,nivel,enun,ok,errs,com})}
 q("Cinemática","F","Um corredor completa uma volta em uma pista circular e retorna exatamente ao ponto de partida. Sobre sua velocidade média e sua rapidez média nessa volta:","a velocidade média é nula, mas a rapidez média não é nula",["as duas são nulas","as duas são iguais e diferentes de zero","a velocidade média é maior que a rapidez média","a rapidez média é nula, mas a velocidade média não é"],"Velocidade média é vetorial e depende do deslocamento (posição final − inicial). Como ele voltou ao ponto de partida, o deslocamento é zero e a velocidade média é zero. Rapidez média é escalar e depende da distância percorrida, que não é zero.");
 q("Cinemática","M","Dois alunos agacham até a mesma profundidade. O aluno B faz a descida na metade do tempo do aluno A. Em relação ao aluno A, a velocidade angular média do joelho de B é:","maior, pois o mesmo deslocamento angular ocorre em menos tempo",["menor, pois a amplitude foi a mesma","igual, pois a amplitude foi a mesma","nula, pois os dois chegam à mesma posição","impossível de comparar sem conhecer a carga"],"Velocidade angular média é o deslocamento angular dividido pelo tempo. Com o mesmo deslocamento angular do joelho em menos tempo, a velocidade angular é maior.");
 q("Cinemática","M","Em um sprint, a atleta parte do repouso, aumenta a velocidade nos primeiros metros e depois mantém velocidade constante em linha reta. Sobre a aceleração:","é positiva na arrancada e aproximadamente nula na fase de velocidade constante",["é nula na arrancada e positiva na fase de velocidade constante","é positiva durante toda a prova","é negativa na arrancada","é igual à velocidade em qualquer instante"],"Aceleração é a taxa de variação da velocidade. Na arrancada a velocidade aumenta (aceleração positiva); quando a velocidade se mantém constante, a variação é nula e a aceleração é nula.");
@@ -217,48 +218,554 @@ q("Evidência","F","Sobre a amplitude de movimento (ADM) no treinamento de forç
 q("Evidência","M","Sobre a falha muscular na hipertrofia, a recomendação mais coerente é:","não é obrigatória; deixar cerca de 2 a 3 repetições em reserva costuma bastar",["é obrigatória em todas as séries","deve ser evitada em qualquer caso","só vale para exercícios com máquina","é necessária para que o músculo cresça em qualquer série"],"Revisões e posicionamentos recentes indicam que a proximidade da falha importa, mas ir até a falha em toda série não é necessário. Séries a 2–3 repetições em reserva costumam permitir volume maior com bom estímulo.");
 q("Evidência","M","Sobre carga e hipertrofia, a afirmação mais coerente com a evidência é:","cargas leves e pesadas levam a hipertrofia semelhante quando próximas da falha; força máxima favorece cargas altas",["só cargas acima de 80% de 1RM geram hipertrofia","só cargas leves geram hipertrofia","a zona de 8 a 12 repetições é a única que funciona","a carga não influencia nenhuma adaptação"],"Existe ampla faixa de cargas (de ~30% a 80% de 1RM, perto da falha) que produz hipertrofia parecida. Para força máxima, cargas ≥ 80% de 1RM favorecem mais, por especificidade. A \"zona de 8–12\" não é um limite fisiológico.");
 q("Evidência","D","Uma meta-análise compara treino excêntrico com concêntrico e traz diferença média pequena, com intervalo de confiança de 95% que inclui o zero e certeza da evidência (GRADE) baixa. A interpretação correta é:","não se pode concluir superioridade; a evidência é incerta",["a excêntrica é claramente superior","a concêntrica é claramente superior","o resultado prova que não há nenhuma diferença","o estudo deve ser descartado por ser meta-análise"],"Quando o IC de 95% inclui o zero, o dado é compatível com benefício, nenhum efeito ou prejuízo. Com certeza GRADE baixa, os resultados podem mudar com novos estudos. Não significa \"prova de ausência de efeito\", e sim incerteza.");
+window.D_BIO=Q})();
+(function(){const Q=[];function q(tema,nivel,enun,ok,errs,com){Q.push({tema,nivel,enun,ok,errs,com})}
+q("Aprendizagem e desempenho","F","Na Aprendizagem Motora, aprendizagem é definida como:",
+ "uma mudança relativamente permanente na capacidade de desempenho, resultante da prática ou da experiência",["qualquer melhora observada durante uma sessão de treino","uma mudança temporária causada pelo aquecimento ou pela motivação","o amadurecimento biológico que ocorre com a idade","a capacidade herdada geneticamente para executar uma habilidade"],
+ "Aprendizagem não se observa diretamente: é inferida a partir de mudanças relativamente permanentes no desempenho que resultam da prática. Melhoras momentâneas (aquecimento, motivação) e a maturação não são, por si só, aprendizagem.");
+q("Aprendizagem e desempenho","M","Um aluno melhora muito o saque do voleibol durante a aula, mas, na semana seguinte, sem ter praticado, volta ao nível inicial. A interpretação mais adequada é que:",
+ "houve melhora de desempenho, mas não aprendizagem relativamente permanente",["houve aprendizagem completa, e o esquecimento é normal","a habilidade era uma capacidade e, por isso, não pode ser aprendida","a prática foi insuficiente para qualquer mudança no desempenho","o aluno apresentou maturação motora"],
+ "Desempenho é o que se observa durante a prática e pode ser afetado por fatores temporários. Se a melhora não se mantém no teste de retenção, não houve mudança relativamente permanente, ou seja, não houve aprendizagem consolidada.");
+q("Aprendizagem e desempenho","D","Dois grupos praticam o passe do handebol de três distâncias. O grupo A pratica em blocos; o grupo B, em ordem aleatória. Na aquisição, A é melhor; na retenção e na transferência, B é superior. Um estagiário conclui que \"A aprendeu mais, porque errou menos nos treinos\". Essa conclusão:",
+ "confunde desempenho na aquisição com aprendizagem",["está correta, pois o desempenho na aquisição é a melhor medida da aprendizagem","está correta, pois a prática aleatória prejudica a retenção","é irrelevante, pois a organização da prática não afeta a aprendizagem","vale apenas para habilidades fechadas"],
+ "É o efeito da interferência contextual: a prática aleatória piora o desempenho na aquisição, mas melhora retenção e transferência. A aprendizagem se avalia depois, em teste de retenção e de transferência, não pelo desempenho durante o treino.");
+q("Aprendizagem e desempenho","M","Para verificar se uma turma aprendeu um lançamento, a professora aplica um teste dias depois do término da prática, sem feedback, na mesma tarefa. Esse procedimento é chamado de teste de:",
+ "retenção",["transferência","aquisição","pré-teste","fadiga"],
+ "O teste de retenção repete a mesma tarefa depois de um intervalo sem prática. A transferência usa uma tarefa ou condição nova; a aquisição é o desempenho durante a prática.");
+q("Aprendizagem e desempenho","M","Depois de aprender o arremesso a 3 m, os alunos são testados a 5 m, distância que não praticaram. Esse teste avalia principalmente:",
+ "a transferência da aprendizagem",["a retenção da tarefa praticada","a fadiga acumulada","o desempenho durante a aquisição","a capacidade herdada"],
+ "Transferência é a capacidade de aplicar o que foi aprendido em uma situação nova ou modificada, como outra distância, outra tarefa ou outro contexto.");
+q("Aprendizagem e desempenho","M","Um jogador acerta bem os passes nos treinos em blocos, mas erra muito no jogo, onde as situações mudam o tempo todo. Uma explicação coerente com a literatura é que:",
+ "a prática em blocos tem pouca interferência contextual e favorece menos a retenção e a transferência",["a prática em blocos sempre garante bom desempenho em jogo","o jogador tem pouca capacidade herdada","o jogo é uma habilidade fechada","o jogador esqueceu a habilidade por maturação"],
+ "A prática em blocos melhora o desempenho no treino, mas favorece menos a retenção e a transferência. A prática variada e aleatória exige que o aprendiz reconstrua a solução a cada tentativa, o que ajuda no jogo.");
+q("Habilidades e classificações","F","A diferença entre capacidade e habilidade motora é que:",
+ "capacidade é um traço relativamente estável que sustenta o desempenho; habilidade é uma tarefa aprendida com objetivo específico",["capacidade se aprende pela prática; habilidade é herdada","ambas são sinônimos","habilidade é sempre fechada; capacidade é sempre aberta","capacidade só existe em atletas"],
+ "Capacidades (como tempo de reação, equilíbrio, coordenação) são traços relativamente estáveis; habilidades são ações aprendidas e dirigidas a um objetivo (por exemplo, o saque), que dependem de várias capacidades.");
+q("Habilidades e classificações","M","Pela estabilidade do ambiente, a defesa individual no futsal, em que o jogador se ajusta ao adversário que se movimenta, é uma habilidade:",
+ "aberta, pois o ambiente é imprevisível",["fechada, pois o ambiente é estável","discreta, por ter começo e fim definidos","serial, por ter sequência fixa","contínua, por não ter fim definido"],
+ "Habilidades abertas ocorrem em ambiente imprevisível e exigem adaptação constante. A pergunta usa o critério da estabilidade do ambiente, e não o do início e fim da ação (discreta, serial, contínua).");
+q("Habilidades e classificações","M","Pelo início e fim definidos da ação, arremessar um lance livre no basquete é uma habilidade:",
+ "discreta",["contínua","serial","fechada, mas não discreta","reflexa"],
+ "Habilidade discreta tem início e fim claros e é composta por uma ação única. Serial reúne várias ações discretas em sequência (uma série de ginástica), e contínua não tem início e fim definidos (natação, corrida).");
+q("Taxonomia de Gentile","M","Ao ensinar a bandeja a iniciantes, uma progressão coerente com a taxonomia de Gentile é:",
+ "sem defensor e em condição estável, depois com defensor passivo e, por fim, defensor ativo",["começar com defensor ativo para que aprendam a lidar com pressão","começar pelo jogo 5 contra 5 e, depois, reduzir as variáveis","manter o mesmo ambiente e a mesma distância por todo o semestre","eliminar a bola até que dominem a corrida"],
+ "Para iniciantes, a taxonomia sugere reduzir demandas do ambiente (condições regulatórias estáveis, sem variabilidade) para que o aprendiz forme a ideia do movimento, e então aumentar a complexidade.");
+q("Taxonomia de Gentile","M","Segundo Gentile, o iniciante na primeira fase de aprendizagem tem como meta principal:",
+ "adquirir a ideia do movimento (padrão de coordenação) e aprender a discriminar o que é relevante no ambiente",["fixar e diversificar a habilidade em ambientes variados","automatizar a resposta sem prestar atenção","desenvolver apenas a velocidade de reação","maximizar a potência muscular"],
+ "No primeiro estágio, o aprendiz precisa entender a tarefa, formar um padrão de movimento e distinguir pistas reguladoras. A fixação e a diversificação vêm depois.");
+q("Controle motor","M","No modelo de Fitts e Posner, o aprendiz na fase cognitiva costuma apresentar:",
+ "muitos erros, grande variabilidade e necessidade de atenção consciente à tarefa",["movimentos automáticos, sem necessidade de atenção","poucos erros e alta consistência","capacidade de realizar duas tarefas ao mesmo tempo sem perda","desempenho estável, com pouca melhora"],
+ "Na fase cognitiva o aprendiz ainda descobre o que fazer: erros grandes, variáveis e dependentes de instrução e atenção. A automatização e a consistência aparecem na fase autônoma.");
+q("Controle motor","M","Um treinador percebe que o atleta realiza a habilidade quase sem atenção e consegue conversar ao mesmo tempo, com poucos erros. Esse atleta está, no modelo de Fitts e Posner, na fase:",
+ "autônoma",["cognitiva","associativa inicial","reflexa","fundamental"],
+ "A fase autônoma é caracterizada por automatização, baixa demanda atencional, alta consistência e poucos erros, o que permite realizar uma segunda tarefa sem grande perda.");
+q("Controle motor","D","A teoria de circuito fechado de Adams propõe um traço perceptivo e um traço de memória. Uma limitação frequentemente apontada é que ela:",
+ "explica mal movimentos rápidos, sem tempo para feedback, e a produção de movimentos novos",["não admite o uso de feedback","nega a existência de memória","só se aplica a crianças","não faz nenhuma previsão sobre a prática"],
+ "Teorias de circuito fechado dependem de comparação com a referência de correção. Em movimentos muito rápidos há pouco tempo para feedback, e elas explicam mal como se produz um movimento nunca realizado.");
+q("Controle motor","M","Um aluno escreve seu nome com a mão dominante, com a não dominante e com o pé. O padrão geral da letra se mantém, embora o tamanho e os músculos usados variem. Isso ilustra, na teoria do esquema de Schmidt:",
+ "um programa motor generalizado, com invariantes e parâmetros ajustáveis",["a especificidade rígida da prática","a ausência de memória motora","um reflexo espinhal","a fase cognitiva de Fitts e Posner"],
+ "O programa motor generalizado guarda invariantes (ordem dos eventos, tempo e força relativos) e permite variar parâmetros (tamanho, velocidade, músculos), como ao escrever com partes do corpo diferentes.");
+q("Controle motor","M","Na perspectiva de Bernstein, o iniciante costuma \"congelar\" articulações e tornar o movimento rígido. Isso ocorre porque:",
+ "precisa controlar muitos graus de liberdade e simplifica o problema bloqueando algumas articulações",["não tem nenhuma articulação disponível para o movimento","o sistema nervoso não está desenvolvido","o movimento é totalmente programado pelo cerebelo","a gravidade impede a mobilidade"],
+ "O problema dos graus de liberdade surge porque o corpo tem muitas articulações e músculos. O aprendiz inicial reduz o problema \"congelando\" graus de liberdade e os libera conforme a habilidade evolui.");
+q("Controle motor","M","Uma criança de 6 anos não consegue rebater uma bola de tênis. No modelo de restrições de Newell, qual ajuste é uma restrição da tarefa?",
+ "usar bola maior e mais lenta e raquete mais curta",["esperar que a criança aumente a massa corporal","aplicar um teste de força de preensão","mudar a temperatura da quadra","dizer à criança que se esforce mais"],
+ "As restrições de Newell são do indivíduo, da tarefa e do ambiente. Ajustar o implemento (bola, raquete) e as regras são restrições da tarefa. Temperatura e piso são do ambiente; massa e força são do indivíduo.");
+q("Controle motor","M","No processamento de informação, a ordem dos estágios, do estímulo à ação, é:",
+ "identificação do estímulo, seleção da resposta e programação da resposta",["programação, identificação e seleção","seleção, programação e identificação","identificação, programação e seleção","execução, identificação e seleção"],
+ "Primeiro o sistema identifica o estímulo, depois escolhe a resposta adequada e por fim programa os músculos para executá-la.");
+q("Controle motor","M","De acordo com a lei de Hick, em um jogo em que o jogador passa a ter mais opções de passe a cada momento, o tempo de reação tende a:",
+ "aumentar, pois aumenta o número de alternativas de resposta",["diminuir, pois há mais opções para escolher","permanecer igual, pois não depende do número de alternativas","tornar-se nulo","depender apenas da força muscular"],
+ "A lei de Hick descreve que o tempo de reação de escolha aumenta com o número de alternativas de resposta, o que ajuda a entender por que simplificar as decisões acelera a reação.");
+q("Controle motor","D","A transição espontânea entre caminhar e correr quando a velocidade aumenta é, na abordagem de sistemas dinâmicos, explicada principalmente como:",
+ "auto-organização que emerge da interação entre indivíduo, tarefa e ambiente",["resultado de um programa motor central que comanda cada músculo","um reflexo primitivo persistente","consequência exclusiva de feedback verbal","uma falha de memória motora"],
+ "Os sistemas dinâmicos descrevem padrões de coordenação que emergem da interação entre componentes e mudam de modo qualitativo (transição de fase) quando um parâmetro, como a velocidade, atinge um ponto crítico.");
+q("Feedback e instrução","F","Um professor diz ao aluno: \"a bola caiu 1 m à frente do alvo\". Esse tipo de informação é:",
+ "conhecimento de resultados (CR)",["conhecimento de performance (CP)","instrução prévia","demonstração","prática mental"],
+ "CR informa o resultado em relação à meta da tarefa. CP descreve o movimento (por exemplo, \"você não estendeu o cotovelo\").");
+q("Feedback e instrução","F","Um professor diz: \"você não estendeu o cotovelo no final do movimento\". Esse tipo de informação é:",
+ "conhecimento de performance (CP)",["conhecimento de resultados (CR)","uma meta de resultado","uma medida de produto","uma pista de ambiente"],
+ "CP (ou CD, conhecimento de desempenho) é o feedback sobre o padrão de movimento, e não sobre o resultado na meta.");
+q("Feedback e instrução","M","Um aluno recebe feedback após toda tentativa e vai bem na aquisição, mas piora quando o feedback é retirado no teste de retenção. A explicação mais coerente é:",
+ "dependência do feedback; convém reduzir a frequência ou usar feedback resumido ou em faixa de amplitude",["a aprendizagem foi completa e não há o que ajustar","o aluno deixou de ter capacidades motoras","feedback nunca altera a aprendizagem","o aluno estava sem motivação"],
+ "Feedback muito frequente pode guiar o desempenho na aquisição e criar dependência, prejudicando a retenção. Reduzir a frequência, resumir ou dar feedback apenas quando o erro passa de uma faixa ajuda a promover aprendizagem.");
+q("Feedback e instrução","M","Deixar o aprendiz escolher quando quer receber feedback (feedback autocontrolado), em comparação com receber em momentos definidos pelo professor, tende a:",
+ "favorecer a retenção e a transferência",["prejudicar a aprendizagem em qualquer tarefa","não ter nenhum efeito relatado","aumentar apenas o desempenho na aquisição","eliminar a necessidade de professor"],
+ "Revisões recentes indicam efeito favorável do feedback autocontrolado na retenção e na transferência, possivelmente por maior engajamento e processamento da informação. O efeito depende da tarefa e do aprendiz.");
+q("Feedback e instrução","D","Sobre o foco de atenção externo (no efeito do movimento) × interno (no corpo), a leitura mais prudente das evidências recentes é:",
+ "o benefício do foco externo foi muito debatido; reanálises sugerem efeitos pequenos e incertos, e não uma regra absoluta",["o foco interno é sempre superior","o foco externo é sempre superior em todas as tarefas","não há nenhuma pesquisa sobre o tema","o foco de atenção não afeta nenhuma tarefa motora"],
+ "Metanálises anteriores mostravam vantagem do foco externo, mas uma reanálise bayesiana corrigindo vieses de publicação reduziu os efeitos a valores próximos de zero. O professor deve usar o foco como estratégia, sem tratá-lo como regra.");
+q("Feedback e instrução","M","Para ensinar uma habilidade complexa, cujas partes são fortemente interdependentes (como a braçada do nado crawl), a estratégia mais indicada costuma ser:",
+ "praticar a habilidade inteira ou em partes que mantenham a relação entre os componentes",["fragmentar em partes independentes e praticá-las separadamente por semanas","praticar apenas de olhos fechados","evitar qualquer demonstração","praticar somente os componentes mais fáceis"],
+ "Em tarefas de alta organização, em que os componentes interagem, a fragmentação isolada pode distorcer a coordenação. Tarefas com partes independentes e de baixa organização podem ser fragmentadas.");
+q("Prática","M","Entre prática massificada e prática distribuída (com intervalos de descanso), a distribuída costuma ser:",
+ "mais favorável à retenção, embora o desempenho na aquisição possa ser parecido",["pior para a aprendizagem em qualquer caso","irrelevante para a aprendizagem","útil apenas para atletas de elite","sempre mais cansativa e, por isso, menos eficaz"],
+ "O espaçamento entre as sessões reduz a fadiga e favorece a consolidação, com ganhos em retenção na maioria dos estudos, ainda que dependa da tarefa.");
+q("Prática","F","A prática mental (ensaio imaginário da habilidade, sem movimento aberto) é mais bem descrita como:",
+ "um complemento útil à prática física, e não um substituto",["um substituto completo da prática física","uma técnica sem nenhum efeito","exclusiva de crianças","indicada apenas para habilidades abertas"],
+ "A literatura mostra benefícios quando a prática mental é combinada com a física (e em situações de lesão ou de acesso limitado), mas ela geralmente é inferior à prática física isolada.");
+q("Prática","M","Um professor muda a meta \"faça o seu melhor\" para \"acerte pelo menos 6 de 10 arremessos\". A mudança é coerente com a literatura porque as metas:",
+ "específicas, desafiadoras e realistas tendem a melhorar o desempenho e a motivação",["vagas funcionam melhor que as específicas","impossíveis aumentam sempre o desempenho","não têm nenhum efeito","só funcionam para adultos"],
+ "A teoria da definição de metas indica que metas específicas e desafiadoras, mas atingíveis, orientam a atenção e o esforço melhor do que metas vagas.");
+q("Prática","M","Ao ensinar o arremesso, a professora varia a distância e o peso da bola a cada série. Esse tipo de prática, segundo a teoria do esquema de Schmidt, favorece principalmente:",
+ "a formação de um esquema mais amplo e a transferência",["a especificidade rígida da tarefa","a dependência de feedback","a diminuição de qualquer variabilidade","a eliminação do programa motor"],
+ "A prática variada de uma mesma classe de ações fortalece a regra (esquema) que relaciona parâmetros e resultados, favorecendo a transferência para parâmetros novos.");
+q("Medidas","M","Um atleta arremessa 10 vezes ao alvo e todas as bolas caem cerca de 20 cm à direita do centro, com pouca dispersão. Em relação aos erros, esse padrão indica:",
+ "erro constante alto (viés) e erro variável baixo (boa consistência)",["erro variável alto e erro constante baixo","erro constante e variável baixos","erro constante nulo e erro variável alto","erro absoluto nulo"],
+ "O erro constante mede o viés (direção e magnitude média do erro) e o erro variável mede a consistência (dispersão). Aqui há viés para a direita e pouca dispersão.");
+q("Medidas","M","Qual medida é orientada ao processo na análise de um salto em distância?",
+ "o ângulo do joelho na fase de impulsão, obtido por vídeo",["a distância final saltada, em metros","o tempo total da prova","o número de tentativas","a colocação na competição"],
+ "Medidas de processo descrevem o padrão do movimento (cinemática, observação de critérios). Medidas de produto descrevem o resultado da ação (distância, tempo, pontos).");
+q("Atenção e pressão","M","O fenômeno conhecido como quiet eye, observado em atletas experientes em tarefas de mira, refere-se a:",
+ "uma fixação visual final mais longa no alvo antes de iniciar o movimento",["uma piscada longa antes do arremesso","fechar os olhos durante o movimento","olhar para o adversário o tempo todo","a ausência de movimentos oculares em todo o jogo"],
+ "Quiet eye é a última fixação visual estável no alvo antes da ação crítica. Em tarefas de mira, atletas habilidosos tendem a ter fixações mais longas.");
+q("Atenção e pressão","D","Um atleta rende bem no treino, mas falha sob pressão, porque tenta controlar conscientemente cada passo do movimento. Uma estratégia coerente com a literatura é:",
+ "aprender com poucas regras explícitas (aprendizagem implícita) ou usar foco em um efeito externo simples",["dar mais instruções verbais detalhadas durante o jogo","aumentar a quantidade de feedback sobre cada articulação","evitar toda prática sob pressão","trocar de modalidade"],
+ "Sob pressão, o controle consciente de movimentos já automatizados pode atrapalhar o desempenho (reinvestimento). Aprender com menos regras explícitas e usar pistas simples e externas pode reduzir esse efeito.");
+q("Desenvolvimento motor","F","Na classificação de Gallahue, as categorias de movimentos fundamentais são:",
+ "estabilizadoras, locomotoras e manipulativas",["reflexas, rudimentares e especializadas","aeróbias, anaeróbias e mistas","fechadas, abertas e mistas","discretas, seriais e contínuas"],
+ "As habilidades fundamentais são estabilizadoras (equilíbrio, giros), locomotoras (correr, saltar) e manipulativas (arremessar, rebater, receber). As outras opções referem-se a outras classificações.");
+q("Desenvolvimento motor","M","Na ampulheta de Gallahue, a fase dos movimentos fundamentais corresponde, em geral, a:",
+ "aproximadamente 2 a 7 anos, em que se desenvolvem correr, saltar, arremessar e receber",["do nascimento até 1 ano, com reflexos","após os 14 anos, com especialização esportiva","somente a idosos","a uma fase sem relação com a idade"],
+ "Após a fase reflexa e rudimentar, a infância é a fase dos movimentos fundamentais, que serão base para as habilidades especializadas. A idade varia entre crianças, e o ambiente e a prática influenciam.");
+q("Competência motora","M","No modelo de Seefeldt (1980), retomado por Faigenbaum e Pfeiffer (2026), a barreira de proficiência está situada entre:",
+ "as habilidades motoras fundamentais e as habilidades transicionais",["os reflexos do recém-nascido e as habilidades fundamentais","as habilidades esportivas e a vida adulta","as habilidades transicionais e as danças","a aptidão relacionada à saúde e ao desempenho"],
+ "A barreira de proficiência é o limiar de competência nas habilidades fundamentais que permite avançar para habilidades transicionais e esportivas. Quem não o ultrapassa tem mais dificuldade nas demandas motoras maiores.");
+q("Competência motora","M","Faigenbaum e Pfeiffer (2026) criticam o incentivo para que crianças acumulem minutos de atividade física moderada a vigorosa sem que lhes ensinem a se mover bem, porque:",
+ "crianças abaixo da barreira de proficiência podem cumprir metas por um tempo, mas tendem a não sustentar a participação quando as demandas aumentam",["a atividade física moderada a vigorosa faz mal à saúde","as metas de atividade são impossíveis de atingir","a competência motora não influencia a participação","a escola não deve oferecer atividade física"],
+ "A crítica é que o foco em quantidade de movimento ignora a qualidade e a competência. Sem proficiência, a participação tende a cair com a idade, quando as tarefas ficam mais complexas.");
+q("Competência motora","M","Uma criança de 5 anos mora em um bairro sem praças seguras, passa a maior parte do tempo diante de telas e ainda não teve oportunidades de praticar correr, saltar e arremessar. No modelo em camadas de Faigenbaum e Pfeiffer (2026), essa situação corresponde principalmente à:",
+ "barreira de participação, ligada a obstáculos sociais e ambientais",["barreira de desempenho, relacionada à competição","barreira maturacional, que impede a aprendizagem antes dos 7 anos","barreira de especialização, ligada ao treino precoce","barreira de proficiência, situada entre transicionais e esportivas"],
+ "A barreira de participação envolve falta de oportunidade, de espaço, de estímulo e de modelos. A barreira de proficiência se refere à competência já praticada, e a de desempenho, à competição e a seus custos.");
+q("Competência motora","M","Um adolescente domina as habilidades fundamentais e algumas transicionais, mas é cortado da equipe da escola em uma seletiva e a família não pode pagar um clube. Essa situação ilustra principalmente a:",
+ "barreira de desempenho, ligada à competição, às pressões e aos custos",["barreira de participação, ligada às telas e à falta de brincadeiras","barreira de proficiência, pois não domina as habilidades fundamentais","barreira reflexa, relacionada a reflexos primitivos","ausência de barreira, pois o adolescente já passou pela proficiência"],
+ "O adolescente já ultrapassou a barreira de proficiência, mas encontra a barreira de desempenho: seleção competitiva, pressão e custos que limitam o acesso à prática esportiva.");
+q("Competência motora","M","Crianças de 4 anos com baixo desempenho motor dizem ser \"muito boas\" em correr e arremessar, enquanto crianças de 10 anos com o mesmo desempenho se percebem pouco competentes. No modelo de Stodden et al. (2008), isso ocorre porque:",
+ "na primeira infância a percepção de competência tende a ser superestimada e se torna mais realista com a idade",["as crianças pequenas avaliam a competência com mais precisão","a percepção de competência não tem papel no modelo","a atividade física deixa de depender da competência aos 8 anos","a competência real deixa de influenciar a atividade física na infância intermediária"],
+ "No modelo de Stodden, a relação entre competência real e atividade física é mediada pela percepção de competência, que é pouco acurada nas crianças pequenas e se alinha ao desempenho real na infância intermediária. Daí a espiral positiva ou negativa de engajamento.");
+q("Avaliação motora","M","Uma pesquisadora quer acompanhar se crianças de 6 anos melhoram a qualidade do padrão de arremesso, mesmo que a distância ainda não mude. Outra quer comparar a coordenação corporal de crianças de 10 anos por escores quantitativos em equilíbrio e saltos. Os instrumentos mais coerentes são, respectivamente:",
+ "o TGMD, orientado ao processo, e o KTK, orientado ao produto",["o KTK, orientado ao processo, e o TGMD, orientado ao produto","o TGMD para as duas, por serem orientadas ao processo","o KTK para as duas, por serem orientadas ao produto","um teste de aptidão cardiorrespiratória e um de preensão"],
+ "O TGMD avalia o padrão de movimento por critérios observáveis (processo). O KTK mede a coordenação por escores em tarefas de equilíbrio e saltos (produto).");
+q("Competência motora","D","Metanálises recentes encontraram associação positiva, de pequena a moderada, entre competência motora e atividade física em adolescentes. A interpretação mais adequada é que:",
+ "a competência motora é um fator que contribui, mas não é o único determinante da atividade física",["a competência motora determina totalmente a atividade física","a associação é nula, portanto a competência é irrelevante","a atividade física só depende do ambiente","a associação invalida o modelo de Stodden"],
+ "Associações de pequena a moderada magnitude indicam que a competência ajuda a explicar a participação, junto com motivação, ambiente, apoio social e outros fatores.");
+q("Competência motora","M","Segundo Faigenbaum e Pfeiffer (2026), jovens que não conseguem aterrissar com segurança, estabilizar as articulações ou desacelerar de forma eficiente tendem a estar:",
+ "mais vulneráveis a lesões no esporte, pois a competência envolve a qualidade do movimento",["menos vulneráveis, pois se movem com mais cuidado","protegidos por terem pouca atividade","na mesma condição de risco de quem tem boa técnica","fora do modelo de barreiras"],
+ "A competência motora envolve controle e qualidade do movimento. Déficits nessas qualidades aumentam a vulnerabilidade a lesões, o que liga a Aprendizagem e Controle Motor à Biomecânica.");
+q("Intervenção","D","Para promover competência motora em crianças de 3 a 7 anos, a estratégia mais coerente com as evidências de programas de habilidades fundamentais é:",
+ "ensino estruturado e intencional das habilidades, com prática variada, feedback e clima de maestria",["deixar apenas as brincadeiras livres, sem nenhuma orientação","especializar a criança em um esporte","acumular minutos de atividade sem foco na técnica","esperar a maturação, sem intervenção"],
+ "Programas bem estruturados de ensino de habilidades fundamentais apresentam efeitos favoráveis na competência. O professor organiza tarefas, feedback e um ambiente que valorize a melhora, e não só o resultado.");
+q("Integração","M","Um professor de Educação Física tem 40 alunos e apenas uma bola. Uma decisão coerente com o que a disciplina ensina sobre prática é:",
+ "montar estações com tarefas variadas e materiais simples, para aumentar o tempo de prática de cada aluno",["manter todos em fila esperando a vez","passar apenas teoria até haver mais bolas","proibir a prática até ter material","praticar só com os alunos mais habilidosos"],
+ "O tempo de prática e de engajamento é central para a aprendizagem. Estações, materiais alternativos e tarefas adaptadas aumentam as oportunidades de prática e a variabilidade.");
+q("Integração","D","Uma criança de 8 anos recebe elogios apenas pelo resultado (\"você acertou!\") e, quando erra, evita praticar por medo de se expor. Uma intervenção coerente com o modelo de Stodden e com a literatura sobre clima motivacional é:",
+ "valorizar a melhora e o esforço, propor tarefas ajustáveis em dificuldade e oferecer feedback sobre o movimento",["manter só o elogio ao resultado","comparar a criança publicamente com os colegas","retirar a criança das aulas","eliminar o feedback para não constranger"],
+ "Clima de maestria, tarefas com dificuldade ajustada e feedback informativo apoiam a percepção de competência e o ciclo de engajamento. Comparação pública e foco só no resultado podem reforçar a espiral negativa.");
+q("Integração","M","Para planejar uma aula de iniciação ao voleibol, o professor quer garantir que os alunos aprendam, e não só pareçam bem na aula. O melhor plano inclui:",
+ "prática variada e espaçada e testes de retenção e de transferência em outro dia",["apenas o teste logo após a última tentativa","apenas feedback em todas as tentativas","apenas prática em blocos, sem variar nada","nenhuma avaliação, para não desmotivar"],
+ "Retenção e transferência medem a aprendizagem. Prática variada e espaçada tendem a aumentar essas medidas, mesmo que o desempenho na aula pareça pior.");
+q("Integração","M","O professor observa que seus alunos novatos cometem muitos erros e variam bastante de uma tentativa para outra. Qual conduta é mais coerente com a fase cognitiva?",
+ "dar poucas instruções simples, demonstrar e permitir muita prática para formar a ideia do movimento",["dar muitas correções simultâneas de cada articulação","exigir velocidade máxima desde o início","reduzir a prática para evitar erro","comparar o aluno com atletas de elite"],
+ "Na fase cognitiva, o aprendiz precisa de instruções claras e poucas, demonstrações e prática para formar o padrão. Excesso de informação sobrecarrega a atenção.");
+q("Integração","D","Duas turmas aprendem o saque do tênis. A turma A pratica só o saque da direita para a esquerda do quadrante; a turma B varia a direção e a altura. Em um teste de transferência com saque em posição nova, a turma B tende a ir melhor porque:",
+ "a variabilidade da prática favorece a formação de um esquema mais flexível",["a especificidade da prática favorece a turma A","a turma B teve menos prática","o saque é uma habilidade que não transfere","a turma A teve mais feedback"],
+ "A prática variada, apesar de piorar o desempenho inicial, constrói regras mais gerais que são aplicadas a condições novas, o que favorece a transferência (esquema de Schmidt).");
+window.D_AMC=Q})();
+(function(){const Q=[];function q(tema,nivel,enun,ok,errs,com){Q.push({tema,nivel,enun,ok,errs,com})}
+// ---- posições e papéis ----
+q("Posições","F","No sistema com cinco posições numeradas, o jogador que organiza o ataque, conduz a bola e distribui o jogo ocupa a posição:",
+ "1, armador",["2, ala-armador","3, ala","4, ala-pivô","5, pivô"],
+ "O armador (1) conduz a bola, define o ritmo e organiza as jogadas. O ala-armador (2) atua no perímetro, ajuda na condução e costuma ser arremessador de média e longa distância.");
+q("Posições","M","O técnico descreve um jogador que auxilia o armador na condução, atua no perímetro e costuma ser o principal arremessador de média e longa distância. Essa descrição corresponde à posição:",
+ "2, ala-armador",["1, armador","4, ala-pivô","5, pivô","6, sexto homem"],
+ "O ala-armador (2) é o jogador de perímetro, ajuda na condução e tem forte arremesso. O pivô (5) atua perto da cesta, e o sexto homem é um reserva importante, não uma posição numerada em quadra.");
+q("Posições","M","O jogador que atua próximo à cesta, é responsável pelos rebotes e pelas finalizações de curta distância e protege o garrafão na defesa ocupa a posição:",
+ "5, pivô",["1, armador","2, ala-armador","3, ala","6, sexto homem"],
+ "O pivô (5) normalmente é o jogador mais alto, atua no garrafão, pega rebotes, finaliza perto da cesta e protege o aro.");
+q("Posições","M","Um treinador quer um jogador que combine a presença no garrafão do pivô com a capacidade de jogar de frente para a cesta e abrir a quadra com arremessos. A posição mais próxima dessa descrição é:",
+ "4, ala-pivô",["1, armador","2, ala-armador","3, ala","5, pivô tradicional, sem arremesso"],
+ "O ala-pivô (4) é um jogador híbrido, que combina o jogo interior com a mobilidade e, em muitas equipes, com o arremesso de média ou longa distância.");
+// ---- ataque ----
+q("Ataque","M","Contra uma defesa por zona, o técnico posiciona quatro atacantes do mesmo lado da quadra, deixando o outro lado com apenas um atacante. Essa estratégia ofensiva é chamada de:",
+ "sobrecarga (overload)",["isolamento individual","transição secundária","corta-luz indireto","pressão quadra toda"],
+ "Na sobrecarga, o ataque concentra mais jogadores em um setor da zona do que defensores disponíveis para marcá-los, o que cria superioridade local.");
+q("Ataque","M","O defensor de um ala nega com intensidade a linha de passe no perímetro. O ala finge receber e corta rapidamente pelas costas do defensor em direção à cesta. Essa ação é conhecida como:",
+ "backdoor",["pick and pop","corta-luz direto","sobrecarga","isolamento de pivô"],
+ "Backdoor é o corte nas costas do defensor que exagera na negação de passe. Pick and pop é um corta-luz seguido de abertura para arremesso.");
+q("Ataque","M","O técnico orienta: \"contra a defesa individual, movimentem-se sem a bola, usem bloqueios e busquem infiltrações\". Essa orientação é adequada porque:",
+ "força trocas e desequilíbrios na defesa",["a defesa individual não se desloca","os bloqueios são proibidos contra a zona","é a única forma de vencer uma zona","o drible excessivo cansa a defesa individual"],
+ "Movimentação sem bola, corta-luzes e infiltrações obrigam os defensores a trocar, ajudar e se reposicionar, o que cria espaços e desorganiza a marcação individual.");
+q("Ataque","M","Um jogador passa a bola e corre imediatamente em direção à cesta para receber o retorno do passe e finalizar. Essa ação é conhecida como:",
+ "passa e vai (give and go)",["backdoor","pick and roll","isolamento","zona pressão"],
+ "No passa e vai (give and go), o jogador passa, corta para a cesta e recebe o retorno, aproveitando o espaço criado pelo defensor que acompanhou a bola.");
+q("Ataque","M","O jogador com a bola chama um companheiro para bloquear seu defensor. Depois do bloqueio, o jogador que bloqueou gira em direção à cesta e recebe o passe. Essa jogada é chamada de:",
+ "pick and roll (corta-luz e rolagem)",["pick and pop, pois o bloqueador abre para a linha de três","backdoor","passa e vai","sobrecarga"],
+ "No pick and roll, o bloqueador (pick) faz o corta-luz e, em seguida, rola em direção à cesta (roll). No pick and pop, ele abre para o arremesso (pop).");
+q("Ataque","D","Contra uma defesa por zona 2-3, a equipe atacante insere um jogador no ponto alto do garrafão (pivô alto, na linha de lance livre) e outros nos cantos. A vantagem tática dessa ocupação é:",
+ "criar opções de passe entre as linhas da zona e forçar ajustes dos defensores",["eliminar a necessidade de movimentar a bola","impedir que a defesa se desloque","ganhar tempo ao deixar a bola parada","fazer a zona virar individual automaticamente"],
+ "Ocupar espaços entre defensores e usar passes para o pivô alto ou para os cantos obriga a zona a se deslocar e abre linhas de passe e de arremesso.");
+q("Ataque","M","Ao enfrentar uma defesa por zona, qual conduta ofensiva é mais coerente?",
+ "movimentar a bola rapidamente, ocupar espaços vazios e usar arremessos de média e longa distância",["driblar contra os defensores até se sentir pressionado","evitar qualquer passe para não perder a posse","ficar parado sob a cesta","usar apenas arremessos de lance livre"],
+ "Zonas protegem o garrafão e concedem mais espaço no perímetro. Mover a bola, ocupar vazios e ameaçar de fora são formas de desequilibrar a zona.");
+// ---- defesa ----
+q("Defesa","M","Uma equipe se posiciona inicialmente em zona, mas, quando a bola se movimenta, os defensores acompanham individualmente os atacantes que entram em suas áreas. Esse sistema é denominado:",
+ "match-up",["zona 3-2 pura","box-and-one","individual por toda a quadra","pressão em zona 2-2-1"],
+ "O match-up combina a organização inicial em zona com o acompanhamento individual dos atacantes que entram na área de cada defensor.");
+q("Defesa","M","Na defesa individual, um atacante supera seu marcador no drible. O defensor do lado fraco se aproxima para conter a infiltração e depois retorna ao seu atacante. Esse princípio defensivo é chamado de:",
+ "ajuda e recuperação",["troca permanente de marcação","dobra de marcação na linha lateral","flutuação no perímetro","marcação por zona"],
+ "O defensor do lado fraco ajuda a conter a infiltração e se recupera para a marcação original, o que mantém a responsabilidade individual.");
+q("Defesa","M","Uma equipe marca com um defensor individual sobre o melhor arremessador adversário e os outros quatro em zona. Esse sistema é chamado de:",
+ "box-and-one",["match-up","zona 3-2","pressão quadra toda","triângulo-e-dois"],
+ "No box-and-one, quatro jogadores formam uma zona em caixa e um marca individualmente o principal ameaça. No triângulo-e-dois são dois marcadores individuais.");
+q("Defesa","M","Ao pressionar a quadra toda, o objetivo principal da defesa é:",
+ "forçar erros e roubos de bola, desorganizando a saída de bola do adversário",["economizar energia e esperar o adversário","evitar qualquer contato","permitir o arremesso livre","atrasar o jogo sem riscos"],
+ "A pressão em quadra inteira, com dobras e antecipações, procura causar erros, violações (como a de 8 s) e roubos, ao custo de maior desgaste e risco de infiltração.");
+q("Defesa","M","No rebote defensivo, antes de buscar a bola, o jogador toca o corpo no atacante que marca para impedi-lo de chegar ao aro. Essa técnica é chamada de:",
+ "bloqueio de rebote (box out)",["corta-luz direto","backdoor","pressão","finta de arremesso"],
+ "O box out (fechar o rebote) cria uma barreira com o corpo entre o atacante e a cesta, o que garante melhor posição para pegar a bola.");
+q("Defesa","D","Em uma defesa em zona 2-3, o atacante recebe a bola no canto e o defensor do fundo se desloca para marcá-lo. Os outros defensores ajustam suas posições. Esse movimento coletivo mostra que a zona:",
+ "protege áreas da quadra e se desloca em bloco conforme a posição da bola",["marca cada atacante em toda a quadra","não exige comunicação entre os defensores","só funciona se a bola ficar parada","elimina a necessidade de rebote"],
+ "Na zona, os defensores responsabilizam-se por espaços e deslocam-se em bloco acompanhando a bola, o que exige comunicação e confiança.");
+q("Defesa","M","Qual é uma desvantagem típica da defesa por zona em relação à individual?",
+ "ser mais vulnerável a arremessos de média e longa distância de atacantes livres",["não proteger o garrafão","exigir marcação homem a homem em toda a quadra","impedir a ajuda entre defensores","ser sempre menos organizada"],
+ "A zona protege o garrafão, mas concede espaço no perímetro; equipes que arremessam bem de fora podem explorar essa fragilidade.");
+q("Defesa","M","Um jogador que já cometeu 4 faltas no quarto decisivo e continua marcando com contato excessivo corre o risco de:",
+ "ser desqualificado se atingir o limite de faltas pessoais, deixando a equipe em desvantagem",["não sofrer nenhuma consequência","ganhar lances livres para o time","aumentar o tempo de posse","ter a falta anulada"],
+ "O jogador que atinge o limite de faltas pessoais é excluído do jogo. Por isso, os técnicos orientam o uso de pés e posição em vez do contato.");
+// ---- transição ----
+q("Transição","M","Após perder a bola, um jogador permanece reclamando com o árbitro enquanto o adversário sai em contra-ataque 2 contra 1. Do ponto de vista tático, essa conduta:",
+ "compromete a transição defensiva",["é aceitável, pois a defesa já está organizada","favorece a transição defensiva","não interfere no jogo","é recomendada para ganhar tempo"],
+ "Na perda da bola, todos devem voltar rapidamente para defender. Ficar reclamando deixa a equipe em inferioridade numérica e facilita o contra-ataque.");
+q("Transição","M","Um técnico treina repetidamente a saída rápida após o rebote defensivo, com passe de saída ao armador e corrida pelos corredores. O objetivo principal é:",
+ "atacar antes de a defesa se organizar",["reduzir o ritmo do jogo","evitar finalizações próximas à cesta","esperar a defesa se posicionar","evitar passes longos"],
+ "O contra-ataque aproveita a defesa ainda desorganizada. A saída rápida, o passe de saída e a ocupação dos corredores criam superioridade numérica.");
+q("Transição","F","Na transição defensiva, a primeira prioridade da equipe após perder a bola é:",
+ "voltar rapidamente, protegendo a cesta e organizando a marcação",["reclamar de arbitragem","parar e observar o adversário","esperar que o armador volte primeiro","evitar a marcação do jogador com a bola"],
+ "A transição defensiva visa recuperar a organização e proteger o aro antes de o adversário finalizar em contra-ataque.");
+q("Transição","M","Em um contra-ataque 3 contra 2, o jogador que conduz a bola e percebe que um defensor se fixa nele deve:",
+ "passar a bola ao companheiro livre, aproveitando a superioridade",["parar e aguardar a defesa","driblar até perder a bola","chutar de longe sempre","passar para trás"],
+ "Em superioridade numérica, a leitura do defensor define a decisão: se um defensor se compromete com o condutor, o companheiro livre recebe e finaliza.");
+// ---- fundamentos ----
+q("Fundamentos","F","Na técnica do arremesso, o aluno deve alinhar o corpo com a cesta, flexionar os joelhos e:",
+ "estender o braço de arremesso em direção à cesta, finalizando com o movimento do punho",["lançar a bola apenas com a força do ombro","arremessar sem olhar para a cesta","manter os pés cruzados","manter a bola abaixo da cintura"],
+ "A sequência do arremesso envolve alinhamento, flexão e extensão dos joelhos, extensão do braço e flexão do punho (follow-through) com os olhos na cesta.");
+q("Fundamentos","M","Na bandeja, o jogador que se aproxima da cesta pela direita deve, em geral, dar o último passo com:",
+ "a perna esquerda, elevando o joelho direito e arremessando com a mão direita",["a perna direita, para ganhar impulso","qualquer perna, pois não faz diferença","ambos os pés juntos","a perna direita, elevando a esquerda"],
+ "O padrão clássico da bandeja pela direita é: passo longo com o pé direito, passo curto com o esquerdo para o salto, joelho direito elevado e arremesso com a direita.");
+q("Fundamentos","M","Qual é a função principal do drible de proteção, com o corpo entre o defensor e a bola?",
+ "proteger a bola do defensor, mantendo o controle e a visão de jogo",["acelerar o jogo ao máximo","simplificar a defesa do adversário","evitar passar a bola","permitir ao defensor roubar a bola"],
+ "O drible de proteção mantém o corpo e o braço livre entre o defensor e a bola, o que preserva a posse e a possibilidade de passe ou arremesso.");
+q("Fundamentos","M","Para passar a bola a um companheiro que corre em direção à cesta, a melhor opção costuma ser:",
+ "passar a bola à frente do receptor, no espaço em que ele chegará",["passar a bola nos pés do receptor","passar atrás do receptor","passar sempre com a bola alta","segurar a bola até o receptor parar"],
+ "Passes a um jogador em movimento devem ser dirigidos ao espaço à frente, para que ele receba sem precisar reduzir a velocidade.");
+q("Fundamentos","F","O pé de pivô é:",
+ "o pé que permanece fixo no chão enquanto o jogador gira com o outro pé, sem driblar",["o pé que sempre se move para trás","o pé usado apenas no drible","qualquer pé, desde que mude de lugar","o pé que bate na bola"],
+ "Ao receber a bola sem driblar, o jogador pode girar sobre o pé de pivô, mantendo-o fixo. Mudar o pé de pivô configura passos.");
+q("Fundamentos","M","Um jogador recebe a bola, dá três passos sem driblar e arremessa. O árbitro apita:",
+ "violação de passos (andada)",["falta de ataque","violação de 8 segundos","dois dribles","bola presa"],
+ "A violação de passos ocorre quando o jogador se desloca com a bola nas mãos além do permitido, sem driblar.");
+q("Fundamentos","M","Um jogador conduz a bola com as duas mãos, para, e depois volta a driblar. A infração é:",
+ "duplo drible",["passos","falta técnica","violação de 3 segundos","bola presa"],
+ "O duplo drible ocorre quando o jogador recomeça a driblar depois de ter apanhado a bola com as duas mãos, ou quando dribla com as duas mãos ao mesmo tempo.");
+q("Fundamentos","M","Um jogador de ataque, sem a bola, permanece no garrafão adversário por mais de 3 segundos consecutivos. A infração é:",
+ "violação de 3 segundos",["violação de 8 segundos","falta técnica","passos","duplo drible"],
+ "Um atacante não pode permanecer mais de 3 segundos consecutivos na área restrita adversária enquanto sua equipe tem o controle da bola em quadra de ataque.");
+// ---- regras ----
+q("Regras","F","Quantos pontos vale uma cesta convertida a partir da linha de três pontos?",
+ "3 pontos",["1 ponto","2 pontos","4 pontos","5 pontos"],
+ "Cestas dentro da linha valem 2 pontos, cestas de fora dela valem 3 e cada lance livre convertido vale 1.");
+q("Regras","M","Uma equipe tem a posse de bola na quadra de defesa. Para evitar violação, ela deve passar a bola à quadra de ataque em até:",
+ "8 segundos",["3 segundos","5 segundos","10 segundos","14 segundos"],
+ "A regra dos 8 segundos limita o tempo para levar a bola à quadra de ataque. Os 24 segundos são o tempo total de posse para finalizar.");
+q("Regras","M","O objetivo da regra dos 24 segundos de posse de bola é:",
+ "obrigar a equipe a tentar finalizar, impedindo que a posse seja prolongada sem ataque",["limitar o tempo de jogo de cada jogador","definir o intervalo entre os quartos","impedir lances livres","reduzir o número de faltas"],
+ "A equipe com a bola precisa finalizar a tempo (a bola deve tocar o aro) antes de acabar o relógio de posse, o que aumenta o ritmo do jogo.");
+q("Regras","M","Quando uma equipe atinge o limite de faltas coletivas em um quarto, as faltas seguintes cometidas por ela resultam em:",
+ "lances livres para o adversário",["técnica ao técnico","expulsão do jogador","anulação de pontos","perda da posse sem lance livre"],
+ "Depois de atingir o limite de faltas de equipe no quarto, cada falta defensiva dá ao adversário lances livres. Antes disso, repõe-se a bola.");
+q("Regras","M","Um atacante com a bola empurra o corpo de um defensor que já estava posicionado, derrubando-o. O árbitro marca:",
+ "falta de ataque",["falta defensiva","violação de passos","falta técnica contra o defensor","dois dribles"],
+ "Quando o atacante com a bola provoca contato contra um defensor com posição legal, comete falta de ataque, com perda da posse.");
+q("Regras","M","Quando um jogador comete uma falta antidesportiva, a consequência é:",
+ "lances livres para o adversário e posse de bola",["somente a reposição lateral","apenas advertência verbal","a anulação da jogada","apenas a perda do arremesso"],
+ "A falta antidesportiva é um contato excessivo ou sem intenção legítima de jogar a bola e, além do lance livre, dá posse ao adversário.");
+q("Regras","F","Uma partida de basquete oficial (FIBA) tem:",
+ "quatro quartos de 10 minutos",["dois tempos de 20 minutos","três tempos de 15 minutos","quatro quartos de 15 minutos","um tempo de 30 minutos"],
+ "O formato FIBA é de 4 quartos de 10 minutos. Há prorrogações de 5 minutos em caso de empate.");
+q("Regras","M","Em caso de empate no fim do tempo regulamentar, o jogo:",
+ "é decidido em prorrogações de 5 minutos, quantas forem necessárias",["acaba empatado","termina em cobrança de pênaltis","é decidido por sorteio","é refeito no dia seguinte"],
+ "No basquete não há empate: o jogo continua em prorrogações de 5 minutos até haver vencedor.");
+// ---- preparação ----
+q("Preparação física","M","Um preparador inclui saltos sobre barreiras e saltos em profundidade no programa dos atletas de basquete, com progressão de volume e cuidado com a técnica de aterrissagem. O objetivo principal é:",
+ "melhorar a potência de membros inferiores",["aumentar a resistência aeróbia de longa duração","melhorar a flexibilidade passiva","reduzir a massa muscular dos membros inferiores","substituir o treino técnico"],
+ "Os exercícios pliométricos exploram o ciclo alongamento-encurtamento e desenvolvem potência e capacidade de salto, importantes no rebote e na finalização. A aterrissagem exige técnica para reduzir o risco de lesão.");
+q("Preparação física","M","Qual exercício é mais coerente com o objetivo de reduzir o risco de entorses de tornozelo e lesões de joelho em jogadores de basquete?",
+ "treino de equilíbrio e de aterrissagem com controle do joelho",["alongamento passivo exclusivo antes do jogo","treino aeróbio de longa duração apenas","evitar qualquer salto","treino de arremesso isolado"],
+ "Programas que combinam equilíbrio, força e técnica de aterrissagem estão entre as estratégias mais usadas para reduzir lesões comuns do basquete.");
+q("Preparação física","M","Qual das capacidades físicas é mais determinante em ações explosivas como saltos para rebote, arrancadas e mudanças de direção?",
+ "potência muscular e velocidade",["flexibilidade passiva","resistência aeróbia de longa duração","apenas a massa corporal","a capacidade de ficar parado"],
+ "O basquete é uma modalidade intermitente, com muitas ações de alta intensidade: saltos, mudanças de direção e sprints dependem de potência e velocidade.");
+q("Preparação física","M","O treinamento intervalado de alta intensidade é frequentemente utilizado no basquete porque:",
+ "o jogo alterna esforços intensos curtos e pausas, o que o aproxima de um perfil intermitente",["o jogo é totalmente contínuo e de baixa intensidade","só importa a resistência de maratonistas","não há nenhuma pausa durante o jogo","o treino intervalado substitui a técnica"],
+ "O jogo envolve ações curtas e intensas com pausas, e treinos intervalados reproduzem essa demanda metabólica.");
+// ---- educação / escola ----
+q("Basquete na escola","M","Em uma escola, o basquete é usado para discutir cooperação, respeito às regras e aos adversários, além de desenvolver habilidades motoras e tomada de decisão. Essa proposta caracteriza o basquete como:",
+ "ferramenta educacional para a formação integral",["esporte de rendimento, voltado à seleção de talentos","atividade de lazer sem intenção pedagógica","treinamento de equipes de competição","conteúdo exclusivamente técnico"],
+ "Na escola, o esporte é um meio de formação, e não apenas de rendimento: envolve valores, convivência e aprendizagem de habilidades.");
+q("Basquete na escola","M","Ao ensinar basquete a uma turma heterogênea, o professor adapta a tarefa: bola menor, cesta mais baixa e regras simplificadas. Essa decisão é coerente porque:",
+ "ajusta as demandas da tarefa ao nível dos alunos e amplia a participação",["torna o jogo mais fácil para atletas apenas","reduz o tempo de prática","impede o desenvolvimento das habilidades","elimina as regras do esporte"],
+ "Adaptações de material e regras (jogos reduzidos, adaptados) permitem que mais alunos vivenciem sucesso e aprendam os princípios do jogo.");
+q("Basquete na escola","M","Qual abordagem é mais coerente com o ensino do basquete para crianças em iniciação?",
+ "jogos reduzidos e atividades lúdicas que ensinem fundamentos dentro do contexto do jogo",["treinos longos e repetitivos de um único fundamento","apenas competições com eliminação","especialização imediata em uma posição","exclusão dos menos habilidosos"],
+ "A iniciação se beneficia de jogos reduzidos, que ensinam fundamentos e decisão em contexto, mantendo a motivação e o engajamento.");
+q("Basquete na escola","D","Um aluno com pouca habilidade é frequentemente excluído das jogadas nos jogos da turma. Uma ação pedagógica coerente do professor é:",
+ "criar regras que obriguem a circulação da bola, como exigir passe para todos antes da finalização",["manter o jogo livre, sem nenhuma regra","tirar o aluno do jogo","reservar a bola aos mais habilidosos","apenas elogiar os melhores jogadores"],
+ "Regras de participação, como passes obrigatórios antes do arremesso, aumentam o envolvimento de todos e permitem trabalhar a cooperação.");
+q("Ataque","M","Um jogador faz um corta-luz (bloqueio) para o companheiro com a bola. Para que o bloqueio seja legal, o jogador que bloqueia deve:",
+ "estar parado, com os pés em base estável, e sem estender braços ou quadril para impedir o defensor",["estar em movimento em direção ao defensor","empurrar o defensor com os braços","bloquear de costas, sem olhar","segurar a camisa do defensor"],
+ "O bloqueio legal exige posição estável antes do contato, sem uso de braços, ombros ou quadril para empurrar. Bloqueio em movimento ou com contato ilegal é falta de ataque.");
+q("Defesa","M","Dois defensores se aproximam do jogador com a bola, perto da linha lateral, para forçá-lo a errar ou a passar sob pressão. Essa ação é chamada de:",
+ "dobra de marcação (trap)",["ajuda e recuperação do lado fraco","zona 2-3","passa e vai","corta-luz direto"],
+ "A dobra (trap) coloca dois defensores sobre o portador da bola, geralmente perto da lateral ou de linhas de fundo, para forçar erros. Exige rotação rápida dos demais defensores.");
+q("Fundamentos","M","Para melhorar o aproveitamento em lances livres, uma estratégia mais coerente com a aprendizagem motora é:",
+ "criar uma rotina pré-arremesso padronizada e praticar em condições de fadiga e de pressão",["mudar a técnica a cada tentativa","evitar a prática sob pressão","arremessar só quando o time está ganhando","reduzir a prática para evitar fadiga"],
+ "Rotinas padronizadas estabilizam a execução, e a prática sob fadiga e pressão aproxima o treino da demanda do jogo, melhorando a transferência.");
+window.D_BAS=Q})();
+(function(){const Q=[];function q(tema,nivel,enun,ok,errs,com){Q.push({tema,nivel,enun,ok,errs,com})}
+// ---- ética e moral ----
+q("Ética e moral","F","A diferença mais adequada entre moral e ética é que:",
+ "a moral reúne normas e costumes de um grupo; a ética é a reflexão crítica sobre esses valores e normas",["moral e ética são totalmente sinônimas","a ética é um conjunto de punições e a moral é uma lei","a moral só existe em religiões e a ética em escolas","a ética é individual e nunca coletiva"],
+ "A moral se refere aos costumes e regras vividos em um contexto, e a ética é o campo de reflexão sobre o que é correto e por quê. Os termos são relacionados, mas não equivalentes.");
+q("Ética e moral","M","Um professor ri de um aluno que erra um movimento diante da turma. Uma reflexão ética sobre essa atitude deve considerar:",
+ "o dever de respeito à dignidade do aluno e as consequências sobre sua participação",["apenas se a turma gostou da brincadeira","apenas se a atitude foi legal","se o aluno reclamou na hora","se outro professor já fez algo parecido"],
+ "Ética exige analisar a ação sob princípios como respeito e dignidade e suas consequências, e não só pela reação do grupo ou pelo costume.");
+q("Correntes éticas","M","A ética de Aristóteles, que entende o agir correto como o desenvolvimento do caráter em busca da vida boa (eudaimonia), é chamada de:",
+ "ética das virtudes",["ética deontológica","utilitarismo","relativismo moral","contratualismo"],
+ "A ética das virtudes enfatiza o caráter e o hábito de agir bem, diferente da deontologia (dever) e do utilitarismo (consequências).");
+q("Correntes éticas","M","Para Kant, uma ação é moralmente correta quando:",
+ "é realizada por dever, de acordo com princípios universais",["produz o maior prazer para o maior número","agrada à maioria","traz vantagem pessoal","depende apenas do contexto"],
+ "Na deontologia kantiana, o valor moral está na intenção de agir por dever, segundo uma lei que possa ser universal, independentemente das consequências.");
+q("Correntes éticas","M","Um técnico decide escalar um atleta lesionado porque o título trará benefício à maioria da torcida. Esse raciocínio, que avalia a ação por suas consequências agregadas, é típico do:",
+ "utilitarismo",["relativismo cultural","ética do cuidado","ética das virtudes","deontologia kantiana"],
+ "O utilitarismo (Bentham e Mill) avalia a ação pelo bem-estar total. Esse raciocínio pode ignorar direitos e a saúde individual, o que mostra um limite da corrente.");
+q("Correntes éticas","D","Em uma discussão sobre expor um atleta lesionado, o profissional afirma: \"sempre devo proteger a saúde do atleta, mesmo que o time perca\". Essa postura se aproxima mais da:",
+ "ética deontológica, pois adota um dever que vale independentemente das consequências",["ética utilitarista, pois pondera os resultados","ética do relativismo, pois depende da opinião de cada um","ausência de ética","ética subjetivista, centrada no gosto pessoal"],
+ "A afirmação coloca um dever (proteger a saúde) acima das consequências esportivas. A deontologia trabalha com deveres e princípios, e não com o resultado agregado.");
+// ---- profissão e Código ----
+q("Profissão e legislação","F","A Lei nº 9.696/1998:",
+ "regulamenta a profissão de Educação Física e cria os Conselhos Federal e Regionais (CONFEF e CREFs)",["proíbe o exercício de Educação Física fora de academias","cria o Código de Defesa do Consumidor","regulamenta apenas atletas profissionais","trata exclusivamente de doping"],
+ "A Lei 9.696/1998 regulamenta o exercício profissional e institui o sistema CONFEF/CREFs, responsável por registrar, orientar e fiscalizar os profissionais.");
+q("Profissão e legislação","M","O Sistema CONFEF/CREF tem entre suas funções:",
+ "registrar, orientar e fiscalizar o exercício profissional, inclusive aplicando sanções éticas",["criar currículos escolares","definir o calendário letivo","fiscalizar impostos de academias","regulamentar o futebol profissional"],
+ "Os conselhos profissionais registram e fiscalizam o exercício da profissão, além de manter o Código de Ética e julgar infrações.");
+q("Profissão e legislação","M","Uma pessoa sem registro profissional passa a prescrever treinos para alunos em uma academia e a cobrar por isso. Do ponto de vista da profissão, essa situação caracteriza:",
+ "exercício ilegal da profissão",["liberdade de expressão, sem nenhuma restrição","atuação regular de aluno voluntário","uma atividade permitida a qualquer pessoa","dever do aluno de pedir o registro"],
+ "A prescrição e a orientação de exercícios, como atividade privativa da profissão, exigem formação e registro. A atuação sem registro caracteriza exercício ilegal.");
+q("Profissão e legislação","M","No Código de Ética, o profissional que descobre que um aluno tem uma condição de saúde que contraindica um exercício deve:",
+ "adaptar a prescrição ou encaminhar o aluno, priorizando a segurança e a saúde",["manter o treino, pois o aluno escolheu","ignorar a informação","esperar o aluno reclamar","divulgar a condição aos demais alunos"],
+ "O profissional tem dever de zelar pela integridade do beneficiário, o que inclui avaliar riscos, adaptar o treino e encaminhar a outros profissionais.");
+q("Profissão e legislação","M","Um profissional comenta, em uma conversa com colegas, a condição de saúde de um aluno, citando nome e diagnóstico. Do ponto de vista ético, a conduta:",
+ "viola o dever de sigilo e a privacidade do aluno",["é permitida, pois a conversa é informal","é obrigatória para a segurança de todos","não tem relação com a ética profissional","é permitida se o aluno estiver ausente"],
+ "O sigilo sobre as informações de saúde e pessoais do beneficiário é dever profissional. Informações só podem ser compartilhadas com consentimento ou em hipóteses legais.");
+q("Profissão e legislação","M","Um profissional promete \"emagrecer 10 kg em 30 dias, garantido\" em seu anúncio. Do ponto de vista ético, essa promessa é questionável principalmente porque:",
+ "promete resultado que não pode garantir, enganando o público",["a publicidade é proibida a todos os profissionais","o anúncio não usa linguagem técnica","o profissional não informou sua idade","o público não se interessa por emagrecimento"],
+ "Os resultados do exercício variam entre pessoas. Prometer resultado garantido é publicidade enganosa e fere princípios de veracidade e responsabilidade.");
+q("Profissão e legislação","D","Quando há conflito entre o interesse comercial de uma academia e a segurança do aluno, o Código de Ética orienta o profissional a:",
+ "priorizar a segurança e a saúde do beneficiário, ainda que isso gere prejuízo comercial",["priorizar sempre o interesse da empresa","priorizar o interesse do profissional","ignorar o conflito","seguir o que fizer a maioria dos colegas"],
+ "A responsabilidade profissional é com o bem-estar e a segurança do beneficiário. O interesse comercial não justifica expor o aluno a riscos desnecessários.");
+// ---- mídias sociais ----
+q("Mídias sociais","M","Um profissional com milhares de seguidores publica: \"Fiz esse treino e esse suplemento por 30 dias e perdi 10 kg, você também vai conseguir!\", com link de desconto, sem informar que é patrocinado. Do ponto de vista ético, a conduta é questionável principalmente porque:",
+ "promete resultados e omite a relação comercial",["utiliza o Instagram, plataforma vedada a profissionais","divulga treino, o que é proibido nas redes","não informa sua idade","não usa linguagem técnica"],
+ "A conduta envolve promessa de resultado individual como se fosse regra e omissão do patrocínio, o que fere transparência e veracidade.");
+q("Mídias sociais","M","Pessoa, Bastos e Rodrigues (2023) estudaram estudantes universitários de Educação Física e suas interações com influenciadores digitais. Entre as conclusões, destaca-se que:",
+ "a Educação Física deve contribuir para a literacia midiática",["os influenciadores substituem a formação universitária","os estudantes não interagem com influenciadores","todo conteúdo de influenciadores é validado cientificamente","o Instagram deve ser proibido na formação"],
+ "Como os estudantes consomem e interagem com conteúdo de influenciadores, a formação precisa desenvolver a capacidade de avaliar criticamente informações e fontes (literacia midiática).");
+q("Mídias sociais","M","Ao compartilhar nas redes a foto de um aluno durante o treino, o profissional deve:",
+ "obter autorização do aluno e respeitar sua imagem e privacidade",["publicar sem avisar, pois o treino é público","publicar apenas se o aluno estiver acima do peso","publicar sempre, desde que sem nome","publicar apenas se houver patrocínio"],
+ "Imagem e dados pessoais exigem consentimento. O uso do aluno em publicidade sem autorização viola o direito à imagem e a privacidade.");
+q("Mídias sociais","M","Um aluno pergunta se pode seguir a dieta que viu em um perfil de internet. A resposta mais coerente com a ética profissional é:",
+ "orientar a avaliar a fonte e, quando necessário, encaminhar a um nutricionista",["indicar que todas as dietas virais funcionam","proibir o aluno de acessar a internet","ignorar a pergunta","elaborar uma dieta, mesmo sem formação em nutrição"],
+ "O profissional de Educação Física deve atuar dentro de sua competência e encaminhar para outro profissional quando o tema ultrapassa sua formação.");
+q("Mídias sociais","D","Um profissional divulga um \"antes e depois\" de aluno que fez o treino por três meses, afirmando que o resultado se deve apenas ao seu método. Qual é a principal crítica?",
+ "atribui o resultado a uma única causa, desconsidera outras variáveis e pode criar expectativa irreal",["não há crítica possível, pois o resultado é real","a crítica é que o aluno é fotografado","a crítica é a escolha da rede social","a crítica é o uso de fotos coloridas"],
+ "Resultados dependem de muitos fatores (genética, alimentação, sono, adesão). Atribuir tudo ao método induz o público a erro e pode gerar frustração e comportamentos de risco.");
+// ---- IA ----
+q("Inteligência artificial","M","Um personal trainer passa a enviar aos alunos treinos gerados integralmente por um aplicativo de inteligência artificial, sem revisar e sem considerar as condições de saúde de cada um. Do ponto de vista ético, a responsabilidade pelos treinos entregues:",
+ "continua sendo do profissional que os prescreve",["é exclusivamente da empresa que criou o aplicativo","é do aluno, que aceitou receber o treino gerado","não existe, pois a tecnologia é neutra","passa automaticamente para a academia"],
+ "A IA pode apoiar a prescrição, mas a responsabilidade técnica e ética permanece com o profissional, que deve revisar, individualizar e responder pelo que entrega.");
+q("Inteligência artificial","M","Uma academia passa a usar um sistema de IA que coleta frequência cardíaca, peso, fotos corporais e hábitos de sono dos alunos, compartilhando-os com empresas parceiras sem informar os usuários. Do ponto de vista ético e legal, essa prática viola:",
+ "a privacidade e o consentimento sobre dados de saúde",["apenas regras de marketing","nenhum princípio, pois os dados foram coletados na academia","somente o regimento interno","apenas o horário de funcionamento"],
+ "Dados de saúde são dados pessoais sensíveis e exigem finalidade clara e consentimento informado. Compartilhar sem informar o titular viola a privacidade e a legislação de proteção de dados.");
+q("Inteligência artificial","M","A Lei Geral de Proteção de Dados (LGPD, Lei 13.709/2018) considera dados sobre a saúde de uma pessoa como:",
+ "dados pessoais sensíveis, que exigem cuidado e base legal específica para tratamento",["dados públicos de livre uso","dados sem relevância jurídica","dados que a academia pode vender","dados que só valem para atletas"],
+ "A LGPD classifica dados de saúde como sensíveis, com proteção reforçada: o tratamento exige consentimento específico ou outra hipótese legal.");
+q("Inteligência artificial","D","Um profissional usa a IA para sugerir um programa de treino a um aluno cardiopata, sem avaliação médica. A conduta mais adequada seria:",
+ "exigir liberação médica, individualizar o programa e revisar criticamente o que a IA sugere",["seguir a sugestão da IA sem alterações","confiar que a IA considera todos os riscos","descartar a avaliação do aluno","transferir a responsabilidade ao aluno"],
+ "A IA não conhece o histórico clínico e pode errar. O profissional deve garantir avaliação adequada, adaptar o programa e responder pelas decisões.");
+// ---- fair play e doping ----
+q("Esporte e doping","M","Vasques e Stigger (2020) relacionam a ética esportiva aos ideais das escolas públicas inglesas e ao pensamento de Pierre de Coubertin, que deram origem ao conceito de fair play. Nesse contexto, o fair play pode ser entendido como:",
+ "competir dentro das regras, com igualdade de oportunidades",["a vitória a qualquer custo, desde que não haja punição","a ausência de regras na competição","o uso de substâncias permitidas para aumentar o rendimento","a exclusividade do esporte amador"],
+ "O fair play, ou jogo limpo, expressa respeito às regras e ao adversário e a busca da igualdade de condições na competição.");
+q("Esporte e doping","M","Vasques e Stigger (2020) apontam que as instituições que se apresentam como guardiãs da moralidade esportiva também convivem com casos de corrupção e má conduta de dirigentes. A crítica evidencia que:",
+ "a ética esportiva se aplica igualmente a atletas e gestores",["o sistema antidoping é plenamente coerente com a conduta dos dirigentes","não existem problemas éticos nas instituições","o doping é o único problema ético do esporte","a ética recai mais sobre os atletas do que sobre os dirigentes"],
+ "A crítica mostra que a exigência ética não pode recair apenas sobre o atleta: dirigentes e instituições também devem prestar contas.");
+q("Esporte e doping","M","Vasques e Stigger (2020) observam que atletas de elite podem contar com acompanhamento médico, enquanto praticantes com menos recursos recorrem a substâncias de origem veterinária, mais baratas e de maior risco. Isso evidencia que:",
+ "os riscos do doping variam com a condição socioeconômica",["o doping afeta todos da mesma forma","o problema do doping é exclusivamente individual","os riscos à saúde são maiores entre atletas de elite","o controle antidoping resolve as desigualdades de acesso"],
+ "O doping não é apenas questão individual. A desigualdade de acesso a acompanhamento, informação e substâncias controladas faz com que os riscos sejam distribuídos de modo desigual.");
+q("Esporte e doping","M","Um jovem atleta é pressionado pelo técnico a usar uma substância proibida \"para não ficar para trás\". A atitude mais coerente com a ética do esporte e da profissão é:",
+ "recusar, informar sobre os riscos e buscar apoio de instâncias competentes",["aceitar, para manter a vaga","aceitar, desde que ninguém descubra","incentivar os colegas a fazerem o mesmo","ignorar o assunto"],
+ "O doping fere o fair play e pode causar danos graves à saúde. A conduta ética inclui recusar, orientar sobre riscos e buscar apoio de entidades antidoping e de representantes.");
+q("Esporte e doping","M","O princípio do fair play é violado quando:",
+ "um atleta simula uma falta para obter vantagem",["um atleta cumprimenta o adversário","a equipe aceita a decisão do árbitro","o técnico elogia o adversário","o atleta ajuda um oponente lesionado"],
+ "Simular, enganar o árbitro e buscar vantagem ilegítima violam o respeito às regras e ao adversário, valores centrais do fair play.");
+q("Esporte e doping","D","Um dirigente esportivo afirma que a ética esportiva \"é uma questão apenas dos atletas\". A resposta mais adequada, à luz da crítica de Vasques e Stigger, é:",
+ "a ética exige responsabilidades de atletas, treinadores e dirigentes, inclusive combatendo corrupção",["ela concorda, pois só os atletas competem","ela concorda, pois dirigentes não têm influência","ela discorda, pois a ética se restringe à torcida","ela discorda, pois a ética só vale para atletas amadores"],
+ "A integridade do esporte depende de todos os agentes. Transferir a responsabilidade só aos atletas esconde problemas institucionais.");
+// ---- inclusão ----
+q("Inclusão","M","Vieira e Alves (2022) investigaram a percepção de estudantes com deficiência física e visual sobre as aulas de Educação Física, analisando três dimensões da inclusão. Elas foram:",
+ "acesso, participação e aprendizagem",["desempenho, competição e seleção","frequência, nota e disciplina","força, resistência e flexibilidade","integração, adaptação e normalização"],
+ "A inclusão em Educação Física é analisada pelo acesso às aulas, pela participação efetiva nas atividades e pela aprendizagem proporcionada.");
+q("Inclusão","M","Em uma escola, um estudante cego permanece sentado durante as aulas porque \"não há bola com guizo\" e o professor não conta com profissional de apoio. Apenas futebol e voleibol convencionais são oferecidos. À luz de Vieira e Alves (2022), essa situação expressa barreiras relacionadas:",
+ "à falta de apoio e de recursos e a um currículo pouco diverso",["exclusivamente à deficiência do estudante","à falta de interesse do estudante","à legislação, que proíbe a participação de estudantes cegos","à presença de esportes paralímpicos no currículo"],
+ "A barreira está no contexto: falta de materiais adaptados, de apoio profissional e de diversidade de atividades. A deficiência, por si só, não impede a participação quando há condições adequadas.");
+q("Inclusão","M","Uma professora, inspirada em Vieira e Alves (2022), inclui goalball e vôlei sentado nas aulas para toda a turma. A avaliação mais adequada dessa iniciativa é que ela:",
+ "é positiva, mas é apenas uma solução parcial",["resolve todas as barreiras à inclusão","segrega os estudantes com deficiência","é inadequada para estudantes sem deficiência","substitui a necessidade de profissional de apoio"],
+ "Atividades paradesportivas ampliam a participação de todos, mas a inclusão também depende de apoio, formação, recursos, avaliação e do currículo como um todo.");
+q("Inclusão","F","A inclusão em Educação Física escolar significa, principalmente:",
+ "garantir acesso, participação e aprendizagem de todos os estudantes, com as adaptações necessárias",["manter o estudante com deficiência em atividades separadas","dispensar o estudante das aulas","aplicar a mesma tarefa a todos, sem adaptação","excluir esportes que exijam adaptações"],
+ "Incluir é garantir que todos participem e aprendam, e não apenas estejam presentes. Isso exige adaptação de atividades, materiais e regras.");
+q("Inclusão","M","Um professor de Educação Física mantém um aluno cadeirante como árbitro em todas as aulas de futsal, \"para que ele participe\". A avaliação mais adequada é que:",
+ "o papel de árbitro pode ser válido em alguns momentos, mas a participação como jogador precisa ser pensada com adaptações",["a conduta é plenamente inclusiva, pois ele participa","a conduta é a única possível","a conduta é proibida por lei","o aluno deve ser dispensado das aulas"],
+ "A participação reduzida a funções periféricas pode excluir o aluno da aprendizagem motora. Adaptar regras e espaços permite que ele jogue e aprenda como os demais.");
+q("Inclusão","D","Uma escola cumpre a obrigação de matricular estudantes com deficiência, mas não oferece formação aos professores nem materiais adaptados. Essa situação mostra que:",
+ "o acesso à matrícula não garante participação e aprendizagem",["a inclusão está plenamente garantida","a deficiência impede o aprendizado","a inclusão é responsabilidade exclusiva da família","materiais adaptados são desnecessários"],
+ "Acesso físico à escola é só a primeira dimensão. Sem apoio, formação e recursos, a participação e a aprendizagem ficam comprometidas.");
+// ---- corpo ----
+q("Corpo e diversidade","M","O estigma de peso (gordofobia) no ambiente da Educação Física pode, por exemplo:",
+ "afastar pessoas da prática por humilhação ou constrangimento, prejudicando sua saúde e participação",["aumentar sempre a adesão ao exercício","melhorar automaticamente a autoestima","não ter nenhuma consequência","ser removido apenas com dieta"],
+ "O estigma de peso está associado a evitação da atividade física, sofrimento psicológico e piores desfechos. O profissional deve oferecer um ambiente acolhedor e baseado em respeito.");
+q("Corpo e diversidade","M","Ao realizar a avaliação física, o profissional comenta em voz alta, diante de outros alunos, o percentual de gordura de uma aluna. A conduta ética mais adequada seria:",
+ "manter a avaliação em ambiente reservado e comunicar os resultados individualmente, com respeito",["manter o comentário público, para motivar","divulgar os resultados em ranking","fazer piadas para descontrair","evitar qualquer avaliação"],
+ "Resultados de avaliações corporais são informações pessoais e sensíveis. O respeito à privacidade e à dignidade é parte do Código de Ética.");
+q("Corpo e diversidade","M","Um professor diz a uma aluna idosa que ela \"não tem mais idade\" para participar de uma atividade de força. Do ponto de vista ético, essa conduta:",
+ "discrimina por idade e ignora que o treino de força pode ser adaptado e benéfico",["é adequada, pois a idade é impeditiva","é a única forma de proteger a aluna","é neutra, pois não envolve ética","é adequada se a aluna não reclamar"],
+ "Idosos podem e devem treinar força, com adaptações. Negar a participação por idade viola o princípio da não discriminação e priva a pessoa de benefícios.");
+// ---- bioética e pesquisa ----
+q("Bioética e pesquisa","M","O Código de Nuremberg (1947) estabeleceu, como princípio central da pesquisa com seres humanos:",
+ "o consentimento voluntário do participante",["a obrigatoriedade da participação","a autorização apenas do pesquisador","a gratuidade de qualquer pesquisa","a proibição de pesquisa com adultos"],
+ "O Código de Nuremberg, criado após os julgamentos de crimes de guerra, afirma que o consentimento voluntário é essencial. É a base do consentimento livre e esclarecido atual.");
+q("Bioética e pesquisa","M","No Brasil, a Resolução CNS nº 466/2012 estabelece diretrizes para pesquisa com seres humanos. Entre as exigências, está a de que o participante:",
+ "receba informações claras e assine o Termo de Consentimento Livre e Esclarecido (TCLE)",["seja informado apenas depois do estudo","seja obrigado a participar","não possa desistir","receba um brinde para aceitar"],
+ "O TCLE garante que o participante conheça objetivos, riscos, benefícios e direitos e decida voluntariamente, inclusive podendo se retirar a qualquer momento.");
+q("Bioética e pesquisa","M","Os Comitês de Ética em Pesquisa (CEP) têm como função:",
+ "avaliar protocolos de pesquisa para proteger os participantes antes que o estudo comece",["julgar infrações do Código de Ética profissional","financiar pesquisas","publicar artigos científicos","registrar profissionais"],
+ "O sistema CEP/CONEP analisa projetos que envolvem seres humanos quanto a riscos, benefícios, consentimento e proteção dos participantes.");
+q("Bioética e pesquisa","M","Em um projeto de TCC, um estudante pretende aplicar um teste de esforço máximo em idosos sem submeter o projeto a um comitê de ética e sem TCLE. A conduta:",
+ "é inadequada, pois pesquisas com seres humanos exigem aprovação ética e consentimento",["é adequada, pois o teste é rápido","é adequada, pois idosos sempre aceitam","é adequada, pois TCC não é pesquisa","é adequada se o orientador concordar verbalmente"],
+ "Pesquisas com seres humanos, inclusive TCCs, exigem aprovação por comitê de ética e TCLE, principalmente com populações vulneráveis e riscos de esforço máximo.");
+q("Bioética e pesquisa","F","O estudo de Tuskegee, em que homens negros com sífilis foram acompanhados sem tratamento e sem consentimento, é um exemplo de:",
+ "violação grave dos princípios éticos da pesquisa com seres humanos",["boa prática de pesquisa","pesquisa aprovada eticamente","estudo sem riscos para os participantes","protocolo que respeita a autonomia"],
+ "Tuskegee é um caso histórico de abuso: os participantes não foram informados nem tratados. Episódios assim motivaram normas como o Relatório Belmont e as diretrizes atuais.");
+q("Bioética e pesquisa","M","Os quatro princípios da bioética principialista de Beauchamp e Childress são:",
+ "autonomia, beneficência, não maleficência e justiça",["lucro, eficiência, rapidez e fama","dever, prazer, utilidade e liberdade","sigilo, publicidade, lealdade e obediência","tradição, costume, religião e lei"],
+ "O principialismo orienta decisões a partir de quatro princípios: respeitar a autonomia, fazer o bem, não causar dano e distribuir benefícios e riscos de forma justa.");
+q("Bioética e pesquisa","M","Um profissional prescreve um exercício de alto risco a um aluno sem informá-lo dos riscos, \"para o bem dele\". Qual princípio bioético é mais diretamente violado?",
+ "autonomia, pois o aluno não pôde decidir de forma informada",["justiça, por tratar todos igualmente","beneficência, pois o profissional agiu bem","não maleficência, pois não há risco","nenhum princípio"],
+ "O respeito à autonomia exige que a pessoa tenha informações para decidir. Agir \"pelo bem dele\" sem informar é paternalismo e desrespeita a autonomia.");
+q("Bioética e pesquisa","D","Em um projeto de pesquisa, o pesquisador altera dados para que os resultados apoiem sua hipótese. Essa conduta é classificada como:",
+ "má conduta científica (fabricação ou falsificação de dados)",["erro estatístico aceitável","estratégia legítima para publicar","ajuste metodológico","autocrítica do pesquisador"],
+ "Fabricar ou falsificar dados é fraude científica, com consequências como retratação de artigos e sanções, além de prejudicar a confiança na ciência.");
+// ---- enfoques e decisão ----
+q("Enfoques éticos","M","A ética do cuidado, nas relações profissionais, destaca:",
+ "a atenção às necessidades concretas da pessoa e à relação de responsabilidade e vínculo",["a aplicação de regras idênticas para todos, sem considerar o contexto","a busca de lucro","a neutralidade absoluta e o distanciamento","a punição como objetivo"],
+ "A ética do cuidado valoriza o contexto, a empatia, a responsabilidade e o vínculo com quem é atendido.");
+q("Enfoques éticos","D","Um aluno com deficiência intelectual quer participar do basquete da turma, e alguns colegas acham que ele atrapalhará o jogo. Qual decisão do professor reflete melhor um enfoque ético baseado na justiça e no cuidado?",
+ "adaptar a atividade e preparar a turma, garantindo participação e respeito, em vez de excluí-lo",["excluir o aluno para preservar o rendimento do jogo","permitir que apenas assista","criar uma turma só para ele, sem conversar","deixar que a turma decida sozinha"],
+ "A justiça exige igualdade de oportunidades e o cuidado exige atenção às necessidades do aluno. Adaptar e educar a turma promove a participação sem hierarquizar os alunos pelo desempenho.");
+q("Enfoques éticos","M","Ao enfrentar um dilema ético na prática profissional, um procedimento coerente com a reflexão ética é:",
+ "identificar os envolvidos e os valores em jogo, ponderar alternativas e consultar o Código de Ética antes de decidir",["decidir apenas pelo instinto","seguir sempre o que o chefe mandar","escolher a opção mais lucrativa","evitar decidir, deixando o problema crescer"],
+ "A deliberação ética envolve reconhecer o problema, os valores e os afetados, avaliar alternativas e justificar a decisão com princípios e normas.");
+q("Enfoques éticos","M","Um professor presencia um colega que humilha publicamente um aluno com sobrepeso. A conduta ética mais adequada é:",
+ "conversar com o colega, registrar a situação e, se persistir, levar às instâncias da escola",["ignorar, pois não é problema seu","imitar a conduta","expor o colega nas redes","esperar o aluno resolver"],
+ "O Código de Ética exige respeito à dignidade das pessoas e permite relatar condutas inadequadas. A abordagem inicial costuma ser o diálogo, seguida de encaminhamento formal se necessário.");
+q("Enfoques éticos","D","Um profissional recebe comissão de uma marca de suplementos e passa a indicar o produto a todos os alunos, sem avaliar necessidade e sem informar a comissão. O principal problema ético é:",
+ "conflito de interesses não declarado, que compromete a independência da orientação",["o uso de suplementos em qualquer situação","o fato de o aluno ser adulto","a escolha da marca","o preço do suplemento"],
+ "Receber vantagem por indicar produtos sem declarar compromete a imparcialidade e o dever de priorizar o interesse do beneficiário.");
+window.D_ETI=Q})();
+const API_URL="https://script.google.com/macros/s/AKfycbyOPeMncwEu2erzI_degB_YlYmsHERnUcvubWmwPbp-bytRwQYg15Oe_8Zbx8iL3TZw6w/exec";
+const OK_API=()=>/^https:\/\/script\.google\.com\//.test(API_URL);
+async function saveResult(reg){
+  if(!OK_API())throw new Error("sem api");
+  const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(reg)});
+  const j=await r.json();if(!j.ok)throw new Error(j.erro||"erro");return j;
+}
+let _rkTimer=null;
+function startRanking(onRows,onMsg){
+  async function load(){
+    if(!OK_API()){onMsg("O ranking ainda não foi conectado à planilha.");return}
+    try{const r=await fetch(API_URL+"?acao=ranking&t="+Date.now());const j=await r.json();onRows(j.linhas||[])}
+    catch(e){onMsg("Não foi possível carregar o ranking. Tente de novo em instantes.")}
+  }
+  load();clearInterval(_rkTimer);_rkTimer=setInterval(()=>{if(!document.getElementById("s-rank").hidden)load()},30000);
+}
+
 (function(){
 const $=id=>document.getElementById(id);
 const L=["A","B","C","D","E"];
-const VER={completa:{nome:"Completa",idx:null},
- curta:{nome:"Curta",idx:[1,2,4,6,8,9,12,13,14,15,16,17,19,21,23,25,26,28,29,31,33,34,35,37,39,43,44,46,47,50].map(x=>x-1)},
- prova:{nome:"Prova",idx:[12,15,16,21,23,25,29,39,44,8].map(x=>x-1)}};
-function ids(v){return VER[v].idx||Q.map((_,i)=>i)}
+const SUB={"bio": {"curta": [1, 2, 4, 6, 8, 9, 12, 13, 14, 15, 16, 17, 19, 21, 23, 25, 26, 28, 29, 31, 33, 34, 35, 37, 39, 43, 44, 46, 47, 50], "prova": [12, 15, 16, 21, 23, 25, 29, 39, 44, 8]}, "amc": {"curta": [1, 3, 4, 6, 8, 10, 11, 13, 15, 17, 18, 20, 22, 23, 25, 27, 29, 31, 33, 34, 36, 38, 39, 40, 42, 43, 45, 47, 48, 50], "prova": [3, 10, 17, 23, 34, 39, 40, 42, 48, 50]}, "bas": {"curta": [1, 2, 4, 5, 6, 8, 10, 12, 13, 14, 16, 18, 20, 21, 22, 24, 26, 28, 29, 31, 33, 35, 36, 38, 40, 41, 43, 45, 47, 49], "prova": [2, 5, 6, 12, 13, 20, 21, 29, 36, 40]}, "eti": {"curta": [1, 3, 5, 7, 9, 10, 12, 13, 14, 16, 18, 19, 20, 22, 24, 26, 27, 29, 30, 31, 33, 35, 37, 39, 41, 42, 44, 45, 47, 49], "prova": [9, 12, 14, 19, 20, 26, 30, 31, 41, 44]}};
+const DISC={
+ bio:{nome:"Biomecânica",turmas:["4A Manhã","4B Manhã","4D Noite"],Q:window.D_BIO},
+ amc:{nome:"Aprendizagem e Controle Motor",turmas:["3AC Noite"],Q:window.D_AMC},
+ bas:{nome:"Basquetebol",turmas:["6A Manhã"],Q:window.D_BAS},
+ eti:{nome:"Ética na Educação Física",turmas:["1A Noite"],Q:window.D_ETI}};
+const VER={completa:"Completa",curta:"Curta",prova:"Prova"};
+const FASE={completa:"Aventura completa",curta:"Missão rápida",prova:"Chefe final"};
+function ids(d,v){return v==="completa"?DISC[d].Q.map((_,i)=>i):SUB[d][v].map(x=>x-1)}
 function fmt(n){return (Math.round(n*10)/10).toString().replace(".",",")}
-function slug(t){return t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")}
+function slug(t){return String(t).normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")}
 function mmss(sec){return Math.floor(sec/60)+"min "+String(sec%60).padStart(2,"0")+"s"}
-const API_URL="https://script.google.com/macros/s/AKfycbyOPeMncwEu2erzI_degB_YlYmsHERnUcvubWmwPbp-bytRwQYg15Oe_8Zbx8iL3TZw6w/exec";
-const OK_API=()=>/^https:\/\/script\.google\.com\//.test(API_URL);
-let st=null;
-
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function lv(n){return n==="F"?"Fácil":n==="M"?"Médio":"Difícil"}
 function show(id){["s-intro","s-quiz","s-end","s-rank"].forEach(s=>$(s).hidden=(s!==id));
   $("n-sim").setAttribute("aria-current",id==="s-rank"?"false":"page");
   $("n-rank").setAttribute("aria-current",id==="s-rank"?"page":"false");window.scrollTo(0,0)}
+function opt(sel,v,t){const o=document.createElement("option");o.value=v;o.textContent=t;sel.appendChild(o)}
+let st=null;
 
-try{const n=localStorage.getItem("sim_nome"),t=localStorage.getItem("sim_turma");if(n)$("nome").value=n;if(t&&["4A Manhã","4B Manhã","4D Noite"].includes(t))$("turma").value=t}catch(e){}
+// ---------- formulário ----------
+Object.keys(DISC).forEach(k=>opt($("disc"),k,DISC[k].nome));
+function fillTurmas(){
+  const d=$("disc").value,t=$("turma");t.innerHTML="";
+  if(!d){opt(t,"","Escolha antes a disciplina");t.disabled=true;return}
+  opt(t,"","Escolha sua turma");DISC[d].turmas.forEach(x=>opt(t,x,x));t.disabled=false;
+}
+$("disc").onchange=fillTurmas;
+try{const n=localStorage.getItem("sim_nome"),d=localStorage.getItem("sim_disc"),t=localStorage.getItem("sim_turma");
+  if(n)$("nome").value=n;
+  if(d&&DISC[d]){$("disc").value=d;fillTurmas();if(t&&DISC[d].turmas.includes(t))$("turma").value=t}}catch(e){}
 
 $("b-start").onclick=()=>{
-  const nome=$("nome").value.trim(), turma=$("turma").value.trim();
-  if(nome.split(/\s+/).length<2||nome.length<5){$("e-intro").textContent="Informe seu nome completo.";return}
+  const nome=$("nome").value.trim(),turma=$("turma").value,disc=$("disc").value;
+  if(!disc){$("e-intro").textContent="Escolha a disciplina.";return}
   if(!turma){$("e-intro").textContent="Escolha sua turma.";return}
+  if(nome.split(/\s+/).length<2||nome.length<5){$("e-intro").textContent="Informe seu nome completo.";return}
   $("e-intro").textContent="";
-  try{localStorage.setItem("sim_nome",nome);localStorage.setItem("sim_turma",turma)}catch(e){}
+  try{localStorage.setItem("sim_nome",nome);localStorage.setItem("sim_turma",turma);localStorage.setItem("sim_disc",disc)}catch(e){}
   const ver=(document.querySelector('input[name="ver"]:checked')||{value:"completa"}).value;
-  const ordem=shuffle(ids(ver)).map(i=>{
+  const Q=DISC[disc].Q;
+  const ordem=shuffle(ids(disc,ver)).map(i=>{
     const q=Q[i];
-    const opts=shuffle([{t:q.ok,c:true}].concat(q.errs.map(t=>({t,c:false}))));
-    return {i,opts};
+    return {i,opts:shuffle([{t:q.ok,c:true}].concat(q.errs.map(t=>({t,c:false}))))};
   });
-  st={ver,nome,turma,ordem,pos:0,ac:0,resp:[],sel:null,done:false,t0:Date.now()};
+  st={disc,ver,nome,turma,ordem,pos:0,ac:0,resp:[],sel:null,done:false,t0:Date.now()};
   show("s-quiz");render();
 };
 
+// ---------- questões ----------
 function render(){
-  const o=st.ordem[st.pos], q=Q[o.i];
+  const o=st.ordem[st.pos],q=DISC[st.disc].Q[o.i];
   st.sel=null;st.done=false;
-  $("who").textContent=st.nome+" · "+st.turma+" · "+VER[st.ver].nome;
+  $("who").textContent=st.nome+" · "+st.turma+" · "+DISC[st.disc].nome+" · "+FASE[st.ver];
   $("pts").textContent="Pontos: "+fmt(st.ac*100/st.ordem.length)+" de "+fmt(st.pos*100/st.ordem.length)+" respondidos";
   $("fill").style.width=(st.pos/st.ordem.length*100)+"%";
   $("c-n").textContent="Questão "+(st.pos+1)+" de "+st.ordem.length;
@@ -275,98 +782,82 @@ function render(){
   });
   $("fb").hidden=true;$("b-ok").hidden=false;$("b-next").hidden=true;$("e-q").textContent="";
 }
-
 $("b-ok").onclick=()=>{
   if(st.sel===null){$("e-q").textContent="Escolha uma alternativa antes de confirmar.";return}
-  const o=st.ordem[st.pos], q=Q[o.i], ok=o.opts[st.sel].c;
+  const o=st.ordem[st.pos],q=DISC[st.disc].Q[o.i],ok=o.opts[st.sel].c;
   st.done=true;if(ok)st.ac++;
   st.resp.push({q:o.i,ok:ok,tema:q.tema,nivel:q.nivel,marcada:o.opts[st.sel].t});
   [...$("opts").querySelectorAll(".opt")].forEach((b,j)=>{
-    b.disabled=true;
-    const tag=b.querySelector(".tag");
+    b.disabled=true;const tag=b.querySelector(".tag");
     if(o.opts[j].c){b.classList.add("right");tag.textContent="✓ Correta"}
     else if(j===st.sel){b.classList.add("wrong");tag.textContent="✗ Sua resposta"}
   });
   $("fb").className="fb"+(ok?"":" bad");
-  const pv=fmt(100/st.ordem.length);$("fb-v").textContent=ok?"Acertou! +"+pv+" pontos":"Errou! 0 ponto";
+  const pv=fmt(100/st.ordem.length);
+  $("fb-v").textContent=ok?"Acertou! +"+pv+" pontos":"Errou! 0 ponto";
   $("fb-c").textContent=q.com;
   $("fb").hidden=false;$("b-ok").hidden=true;
   $("pts").textContent="Pontos: "+fmt(st.ac*100/st.ordem.length)+" de "+fmt((st.pos+1)*100/st.ordem.length)+" respondidos";
   $("fill").style.width=((st.pos+1)/st.ordem.length*100)+"%";
   const nx=$("b-next");nx.hidden=false;nx.textContent=st.pos===st.ordem.length-1?"► Ver minha nota":"► Próxima";nx.focus();
 };
-$("b-next").onclick=()=>{
-  if(st.pos===st.ordem.length-1){finish()}else{st.pos++;render();window.scrollTo(0,0)}
-};
+$("b-next").onclick=()=>{if(st.pos===st.ordem.length-1){finish()}else{st.pos++;render();window.scrollTo(0,0)}};
 
 async function finish(){
   const N=st.ordem.length;const nota=Math.round(st.ac*1000/N)/10;
   show("s-end");
-  $("end-who").textContent=st.nome+" · "+st.turma+" · Versão "+VER[st.ver].nome;
+  $("end-who").textContent=st.nome+" · "+st.turma+" · "+DISC[st.disc].nome+" · "+FASE[st.ver];
   $("nota").textContent=fmt(nota);
   $("end-msg").textContent=st.ac+" acertos em "+N+" questões."+(nota>=70?" Bom desempenho. Revise os pontos abaixo e siga firme.":" Use os comentários abaixo para revisar os temas com menos acertos antes da prova.");
   const by={};st.resp.forEach(r=>{(by[r.tema]=by[r.tema]||{a:0,t:0});by[r.tema].t++;if(r.ok)by[r.tema].a++});
   const tb=$("tb");tb.innerHTML="";
   Object.keys(by).sort((a,b)=>by[a].a/by[a].t-by[b].a/by[b].t).forEach(k=>{
     const tr=document.createElement("tr");
-    [k,by[k].a,by[k].t,Math.round(by[k].a/by[k].t*100)+"%"].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.appendChild(td)});
-    tb.appendChild(tr);
-  });
+    [k,by[k].a,by[k].t,Math.round(by[k].a/by[k].t*100)+"%"].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.appendChild(td)});tb.appendChild(tr)});
   const rev=$("rev");rev.innerHTML="";
   const erradas=st.resp.filter(r=>!r.ok);
   if(!erradas.length){const p=document.createElement("p");p.textContent="Você acertou tudo. Nada para revisar.";rev.appendChild(p)}
   erradas.forEach(r=>{
-    const q=Q[r.q];const d=document.createElement("details");
+    const q=DISC[st.disc].Q[r.q];const d=document.createElement("details");
     const s=document.createElement("summary");s.textContent=q.tema+": "+q.enun.slice(0,90)+(q.enun.length>90?"…":"");
     const p1=document.createElement("p");p1.textContent=q.enun;
     const p2=document.createElement("p");p2.innerHTML="<b>Resposta correta:</b> ";p2.appendChild(document.createTextNode(q.ok));
     const p3=document.createElement("p");p3.innerHTML="<b>Você marcou:</b> ";p3.appendChild(document.createTextNode(r.marcada));
     const p4=document.createElement("p");p4.textContent=q.com;
-    d.append(s,p1,p2,p3,p4);rev.appendChild(d);
-  });
-  await save(nota,by);
-}
-
-async function save(nota,by){
-  const reg={nome:st.nome,turma:st.turma,versao:st.ver,nota:nota,acertos:st.ac,total:st.ordem.length,
+    d.append(s,p1,p2,p3,p4);rev.appendChild(d)});
+  const reg={nome:st.nome,turma:st.turma,disciplina:st.disc,versao:st.ver,nota:nota,acertos:st.ac,total:N,
     duracaoSeg:Math.round((Date.now()-st.t0)/1000),criadoEm:new Date().toISOString(),tentativas:1,
     porTema:by,respostas:st.resp.map(r=>({q:r.q+1,ok:r.ok}))};
-  const fail=()=>{
-    $("save-st").textContent="A nota não foi registrada no ranking.";
-    $("txt").value="Simulado AV3 Biomecânica ("+VER[st.ver].nome+")\nNome: "+st.nome+"\nTurma: "+st.turma+"\nNota: "+fmt(nota)+"/100 ("+st.ac+" acertos)\nData: "+new Date().toLocaleString("pt-BR");
-    $("save-fb").hidden=false;
-  };
+  $("save-st").textContent="Salvando…";$("save-fb").hidden=true;
   try{
-    if(!OK_API()){fail();return}
-    const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(reg)});
-    const j=await r.json();
-    if(!j.ok)throw new Error(j.erro||"erro");
+    const j=await saveResult(reg,slug);
     $("save-st").textContent=j.status==="mantida"?"Sua melhor nota anterior ("+fmt(j.melhor)+") foi mantida no ranking."
       :j.status==="melhor"?"Nova melhor nota registrada no ranking.":"Nota registrada no ranking.";
-  }catch(e){fail()}
+  }catch(e){
+    $("save-st").textContent="A nota não foi registrada no ranking.";
+    $("txt").value="Simulado AV3 · "+DISC[st.disc].nome+" ("+FASE[st.ver]+")\nNome: "+st.nome+"\nTurma: "+st.turma+"\nNota: "+fmt(nota)+"/100 ("+st.ac+" acertos)\nData: "+new Date().toLocaleString("pt-BR");
+    $("save-fb").hidden=false;
+  }
 }
 
 // ---------- ranking ----------
-let rkVer="completa",rkDocs=[];
+let rkDisc="bio",rkVer="completa",rkDocs=[],rkTimer=null;
+Object.keys(DISC).forEach(k=>opt($("rk-disc"),k,DISC[k].nome));
 function rkTabs(){
   const t=$("rk-tabs");t.innerHTML="";
   Object.keys(VER).forEach(k=>{const b=document.createElement("button");b.type="button";b.className="tab";b.setAttribute("role","tab");
-    b.setAttribute("aria-selected",k===rkVer?"true":"false");b.textContent=VER[k].nome+" ("+ids(k).length+")";
+    b.setAttribute("aria-selected",k===rkVer?"true":"false");b.textContent=VER[k]+" ("+ids(rkDisc,k).length+")";
     b.onclick=()=>{rkVer=k;rkTabs();rkRender()};t.appendChild(b)});
 }
 function rkRender(){
-  const f=$("rk-turma").value;
-  let r=rkDocs.filter(d=>d.versao===rkVer);
+  let r=rkDocs.filter(d=>d.disciplina===rkDisc&&d.versao===rkVer);
   const sel=$("rk-turma"),cur=sel.value;
-  const turmas=[...new Set(rkDocs.map(d=>d.turma))].sort((a,b)=>a.localeCompare(b,"pt-BR"));
-  sel.innerHTML='<option value="">Todas as salas</option>';
-  turmas.forEach(t=>{const o=document.createElement("option");o.value=t;o.textContent=t;sel.appendChild(o)});sel.value=turmas.includes(cur)?cur:"";
+  const turmas=[...new Set(rkDocs.filter(d=>d.disciplina===rkDisc).map(d=>d.turma))].sort((a,b)=>a.localeCompare(b,"pt-BR"));
+  sel.innerHTML='<option value="">Todas as salas</option>';turmas.forEach(t=>opt(sel,t,t));sel.value=turmas.includes(cur)?cur:"";
   if(sel.value)r=r.filter(d=>d.turma===sel.value);
   r.sort((a,b)=>b.nota-a.nota||a.duracaoSeg-b.duracaoSeg);
-  const tb=$("rk-b");tb.innerHTML="";
-  $("rk-t").hidden=!r.length;
-  if(!rkDocs.length&&$("rk-st").textContent==="Carregando…")return;
-  $("rk-st").textContent=r.length?r.length+" aluno(s) no ranking.":"Ainda não há notas nesta versão. Faça o simulado para abrir o ranking.";
+  const tb=$("rk-b");tb.innerHTML="";$("rk-t").hidden=!r.length;
+  if(rkLoaded||rkDocs.length)$("rk-st").textContent=r.length?r.length+" aluno(s) no ranking.":"Ainda não há notas nesta fase. Faça o simulado para abrir o ranking.";
   const me=st&&slug(st.nome)+"|"+slug(st.turma);
   r.forEach((d,i)=>{
     const tr=document.createElement("tr");
@@ -375,22 +866,21 @@ function rkRender(){
     tb.appendChild(tr);
   });
 }
-let rkTimer=null;
-async function rkLoad(){
-  if(!OK_API()){$("rk-st").textContent="O ranking ainda não foi conectado à planilha.";return}
-  try{
-    const r=await fetch(API_URL+"?acao=ranking&t="+Date.now());const j=await r.json();
-    rkDocs=(j.linhas||[]).map(d=>({nome:String(d.nome),turma:String(d.turma),versao:String(d.versao),nota:Number(d.nota),duracaoSeg:Number(d.duracaoSeg)}));
-    rkRender();
-  }catch(e){$("rk-st").textContent="Não foi possível carregar o ranking. Tente de novo em instantes."}
+let rkLoaded=false;
+function rkSet(rows){
+  rkDocs=rows.map(d=>({nome:String(d.nome),turma:String(d.turma),disciplina:String(d.disciplina||"bio"),versao:String(d.versao),nota:Number(d.nota),duracaoSeg:Number(d.duracaoSeg)}));
+  rkLoaded=true;rkRender();
 }
 function openRank(){
-  show("s-rank");rkTabs();rkRender();rkLoad();
-  clearInterval(rkTimer);rkTimer=setInterval(()=>{if(!$("s-rank").hidden)rkLoad()},30000);
+  if(st&&DISC[st.disc])rkDisc=st.disc;$("rk-disc").value=rkDisc;
+  show("s-rank");rkTabs();rkRender();
+  startRanking(rkSet,msg=>{$("rk-st").textContent=msg});
 }
+$("rk-disc").onchange=()=>{rkDisc=$("rk-disc").value;rkTabs();rkRender()};
 $("n-rank").onclick=openRank;$("b-torank").onclick=openRank;$("rk-turma").onchange=rkRender;
-$("n-sim").onclick=()=>{if(st&&!st.done&&!$("s-quiz").hidden)return;show(st&&$("s-end")&&st.resp.length===st.ordem.length?"s-end":"s-intro")};
-if(location.hash==="#ranking")openRank();
+$("n-sim").onclick=()=>{if(st&&!$("s-quiz").hidden)return;show(st&&st.resp.length===st.ordem.length&&st.done?"s-end":"s-intro")};
 $("b-again").onclick=()=>{st=null;show("s-intro")};
+if(location.hash==="#ranking")openRank();
 })();
-</script></body></html>
+</script>
+</body></html>
